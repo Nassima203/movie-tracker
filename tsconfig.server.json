@@ -25,6 +25,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["api", "server"],
+  "include": ["api", "server", "tests/node"],
   "exclude": ["server/dev"]
 }
