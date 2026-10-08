@@ -7,7 +7,8 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  // database.ts mirrors `supabase gen types` output and is regenerated, not hand-styled.
+  globalIgnores(['dist', 'coverage', 'src/types/database.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
