@@ -55,6 +55,16 @@ export function resolveTmdbRoute(searchParams: URLSearchParams): RouteResult {
       }
     }
 
+    case 'trending':
+      return {
+        ok: true,
+        upstream: {
+          path: '/3/trending/all/week',
+          params: { language: TMDB_LANGUAGE },
+          maxAge: DETAILS_MAX_AGE,
+        },
+      }
+
     case 'movie':
     case 'tv': {
       const id = parseIntegerInRange(searchParams.get('id'), 1, MAX_TMDB_ID)
@@ -88,6 +98,6 @@ export function resolveTmdbRoute(searchParams: URLSearchParams): RouteResult {
     }
 
     default:
-      return invalid('resource must be one of: search, movie, tv, season')
+      return invalid('resource must be one of: search, trending, movie, tv, season')
   }
 }

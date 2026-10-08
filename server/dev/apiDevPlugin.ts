@@ -1,14 +1,18 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Plugin, ViteDevServer } from 'vite'
 
-interface FetchHandlerModule {
-  default: { fetch: (request: Request) => Promise<Response> }
-}
+type ProxyFactory = (
+  env: NodeJS.ProcessEnv,
+  options: { allowAnonymousWithoutSupabase: boolean },
+) => (request: Request) => Promise<Response>
 
-function isFetchHandlerModule(value: unknown): value is FetchHandlerModule {
-  if (typeof value !== 'object' || value === null || !('default' in value)) return false
-  const handler = value.default
-  return typeof handler === 'object' && handler !== null && 'fetch' in handler
+function readFactory(module: unknown): ProxyFactory {
+  if (typeof module === 'object' && module !== null && 'createProxyFromEnv' in module) {
+    const factory = module.createProxyFromEnv
+    // Dynamically loaded module: the shape is checked above, the signature is ours.
+    if (typeof factory === 'function') return factory as ProxyFactory
+  }
+  throw new Error('server/tmdb/createProxyFromEnv.ts has no createProxyFromEnv export')
 }
 
 function toWebRequest(req: IncomingMessage, signal: AbortSignal): Request {
@@ -34,8 +38,10 @@ async function sendWebResponse(res: ServerResponse, response: Response): Promise
 }
 
 /**
- * Development only: serves `api/tmdb.ts` from the Vite dev server so the
- * proxy works locally without the Vercel CLI. Production uses Vercel Functions.
+ * Development only: serves the TMDB proxy from the Vite dev server so it works
+ * locally without the Vercel CLI. Production uses the Vercel Function
+ * (api/tmdb.ts), which always requires a Supabase session. Locally, without
+ * Supabase, TMDB can be used anonymously to try the interface.
  */
 export function apiDevPlugin(): Plugin {
   return {
@@ -50,12 +56,14 @@ export function apiDevPlugin(): Plugin {
 
         void (async () => {
           try {
-            const loaded: unknown = await server.ssrLoadModule('/api/tmdb.ts')
-            if (!isFetchHandlerModule(loaded)) throw new Error('api/tmdb.ts has no fetch handler')
+            const createProxy = readFactory(
+              await server.ssrLoadModule('/server/tmdb/createProxyFromEnv.ts'),
+            )
+            const handle = createProxy(process.env, { allowAnonymousWithoutSupabase: true })
 
             // `req.url` is relative to the mount point: restore the full path.
             req.url = `/api/tmdb${req.url ?? ''}`
-            const response = await loaded.default.fetch(toWebRequest(req, controller.signal))
+            const response = await handle(toWebRequest(req, controller.signal))
             await sendWebResponse(res, response)
           } catch (error) {
             server.config.logger.error(`[api] ${String(error)}`)

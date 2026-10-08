@@ -139,4 +139,15 @@ describe('TMDB proxy handler', () => {
     const { handle } = setup({ upstream: () => Promise.reject(new TypeError('fetch failed')) })
     expect((await handle(get('resource=movie&id=1'))).status).toBe(502)
   })
+
+  it('skips authentication only when no verifier is configured (local demo)', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(() => Promise.resolve(Response.json({ results: [] })))
+    const handle = createTmdbProxyHandler({
+      tmdbReadAccessToken: TMDB_TOKEN,
+      verifyAccessToken: null,
+      fetchImpl,
+    })
+
+    expect((await handle(get('resource=trending', {}))).status).toBe(200)
+  })
 })

@@ -29,6 +29,13 @@ describe('resolveTmdbRoute', () => {
     expect(resolve(`resource=search&query=a&page=${page}`).ok).toBe(false)
   })
 
+  it('builds the weekly trending list', () => {
+    expect(resolve('resource=trending')).toEqual({
+      ok: true,
+      upstream: { path: '/3/trending/all/week', params: { language: 'fr-FR' }, maxAge: 3600 },
+    })
+  })
+
   it.each(['movie', 'tv'] as const)('builds %s details', (resource) => {
     const result = resolve(`resource=${resource}&id=1396`)
     expect(result).toMatchObject({ ok: true, upstream: { path: `/3/${resource}/1396` } })

@@ -1,20 +1,26 @@
 export interface ServerConfig {
-  tmdbReadAccessToken: string
-  supabaseUrl: string
-  supabasePublishableKey: string
+  /** Secret. Null when TMDB is not configured yet. */
+  tmdbReadAccessToken: string | null
+  /** Public values shared with the browser build. Null when Supabase is not configured yet. */
+  supabase: { url: string; publishableKey: string } | null
+}
+
+function read(value: string | undefined): string | null {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  return trimmed
 }
 
 /**
  * Server-only configuration. `TMDB_READ_ACCESS_TOKEN` is a secret and must
- * never be prefixed with `VITE_`. The Supabase URL and publishable key are
- * public values, shared with the browser build.
+ * never be prefixed with `VITE_`.
  */
-export function readServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig | null {
-  const tmdbReadAccessToken = env.TMDB_READ_ACCESS_TOKEN?.trim()
-  const supabaseUrl = env.VITE_SUPABASE_URL?.trim()
-  const supabasePublishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
+export function readServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
+  const url = read(env.VITE_SUPABASE_URL)
+  const publishableKey = read(env.VITE_SUPABASE_PUBLISHABLE_KEY)
 
-  if (!tmdbReadAccessToken || !supabaseUrl || !supabasePublishableKey) return null
-
-  return { tmdbReadAccessToken, supabaseUrl, supabasePublishableKey }
+  return {
+    tmdbReadAccessToken: read(env.TMDB_READ_ACCESS_TOKEN),
+    supabase: url && publishableKey ? { url, publishableKey } : null,
+  }
 }

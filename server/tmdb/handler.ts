@@ -17,7 +17,8 @@ export type ProxyErrorCode =
 
 export interface TmdbProxyDeps {
   tmdbReadAccessToken: string
-  verifyAccessToken: VerifyAccessToken
+  /** Null only for local development without Supabase (see createProxyFromEnv). */
+  verifyAccessToken: VerifyAccessToken | null
   fetchImpl?: typeof fetch
   timeoutMs?: number
 }
@@ -56,14 +57,16 @@ export function createTmdbProxyHandler(deps: TmdbProxyDeps) {
       return errorResponse(405, 'method_not_allowed', 'Only GET is allowed', { Allow: 'GET' })
     }
 
-    const token = readBearerToken(request)
-    if (!token) return errorResponse(401, 'unauthorized', 'Missing access token')
+    if (deps.verifyAccessToken) {
+      const token = readBearerToken(request)
+      if (!token) return errorResponse(401, 'unauthorized', 'Missing access token')
 
-    const verification = await deps.verifyAccessToken(token)
-    if (verification === 'unavailable') {
-      return errorResponse(503, 'auth_unavailable', 'Authentication service unavailable')
+      const verification = await deps.verifyAccessToken(token)
+      if (verification === 'unavailable') {
+        return errorResponse(503, 'auth_unavailable', 'Authentication service unavailable')
+      }
+      if (verification === 'invalid') return errorResponse(401, 'unauthorized', 'Invalid session')
     }
-    if (verification === 'invalid') return errorResponse(401, 'unauthorized', 'Invalid session')
 
     const route = resolveTmdbRoute(new URL(request.url).searchParams)
     if (!route.ok) return errorResponse(400, 'invalid_request', route.message)
