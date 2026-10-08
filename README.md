@@ -8,20 +8,36 @@ Application web personnelle pour suivre ses films et séries : **ce que j'ai vu,
 - Bibliothèque filtrable, liste « À voir », séries en cours
 - Mode nuit (par défaut) et mode jour, responsive mobile-first, accessible
 
-## Essayer sans rien configurer : le mode démo
+## Essayer en local, sans Supabase
 
-Sans variables Supabase, uwatch démarre en **mode démo** :
+Sans variables Supabase, uwatch démarre en **mode démo** : connexion simulée et bibliothèque stockée dans le navigateur.
 
-- connexion simulée (les boutons Google/GitHub ne contactent aucun service) ;
-- bibliothèque stockée dans le `localStorage` du navigateur ;
-- petit catalogue intégré (sans affiches) à la place de TMDB.
+### Avec les vrais films TMDB (recommandé)
 
-```bash
-npm install
-npm run dev        # http://localhost:5173
-```
+1. Créer un compte sur [themoviedb.org](https://www.themoviedb.org/), puis _Paramètres → API_ et copier le **API Read Access Token**.
+2. Créer un fichier `.env.local` à la racine du projet contenant **uniquement** :
+   ```bash
+   TMDB_READ_ACCESS_TOKEN=votre_token
+   ```
+3. Lancer :
+   ```bash
+   npm install
+   npm run dev        # http://localhost:5173
+   ```
 
-Le mode démo sert à juger l'interface. Dès que `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont définies, l'application passe en mode réel (Supabase + TMDB).
+Recherche, tendances de la semaine et affiches viennent alors de TMDB.
+
+> Sans Supabase, le proxy TMDB accepte les requêtes sans session **uniquement en développement local** (`npm run dev`). En production (Vercel), il exige toujours une session Supabase.
+
+### Sans aucun compte
+
+Sans `.env.local`, l'application utilise un petit catalogue intégré (sans affiches) à la place de TMDB.
+
+### Passer en mode réel
+
+Dès que `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont définies, la connexion Google/GitHub et la base de données Supabase sont utilisées (voir plus bas).
+
+> Après toute modification de `.env.local`, arrêter (Ctrl+C) puis relancer `npm run dev`.
 
 ## Stack
 
