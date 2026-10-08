@@ -1,37 +1,94 @@
-import { LogOut } from 'lucide-react'
-import { Link, Outlet } from 'react-router'
-import { Button } from '@/components/ui/Button'
-import { Spinner } from '@/components/ui/Spinner'
-import { useSignOut } from '@/features/auth/hooks/useSignOut'
+import { NavLink, Outlet } from 'react-router'
+import { Badge } from '@/components/ui/Badge'
+import { SearchCombobox } from '@/features/search/components/SearchCombobox'
+import { ThemeToggle } from '@/features/theme/ThemeToggle'
+import { cn } from '@/lib/cn'
+import { isDemoMode } from '@/lib/env'
+import { AppBackdrop } from './AppBackdrop'
+import { Logo } from './Logo'
+import { NAV_ITEMS } from './navItems'
+import { UserMenu } from './UserMenu'
 
 export function AppLayout() {
-  const { signOut, isPending, hasError } = useSignOut()
-
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="rounded text-xl font-semibold tracking-tight">
-            u<span className="text-accent">watch</span>
-          </Link>
+      <AppBackdrop />
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-fg"
+      >
+        Aller au contenu
+      </a>
 
-          <div className="flex items-center gap-3">
-            {hasError && (
-              <p role="alert" className="text-sm text-red-400">
-                Échec de la déconnexion.
-              </p>
-            )}
-            <Button variant="ghost" disabled={isPending} onClick={() => void signOut()}>
-              {isPending ? <Spinner /> : <LogOut aria-hidden="true" className="size-5" />}
-              <span>Se déconnecter</span>
-            </Button>
+      <header className="sticky top-0 z-30 border-b border-border bg-surface-overlay backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-4 px-4 sm:px-6">
+          <Logo />
+          {isDemoMode && (
+            <Badge tone="accent" className="hidden sm:inline-flex">
+              Démo
+            </Badge>
+          )}
+
+          <nav aria-label="Navigation principale" className="ml-4 hidden md:block">
+            <ul className="flex items-center gap-1">
+              {NAV_ITEMS.filter((item) => !item.mobileOnly).map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    end={item.to === '/'}
+                    className={({ isActive }) =>
+                      cn(
+                        'rounded-full px-3 py-2 text-sm font-medium transition',
+                        isActive ? 'bg-fg/10 text-fg' : 'text-fg-muted hover:text-fg',
+                      )
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="ml-auto hidden w-full max-w-md md:block">
+            <SearchCombobox variant="popover" />
+          </div>
+
+          <div className="ml-auto flex items-center gap-1 md:ml-0">
+            <ThemeToggle />
+            <UserMenu />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-28 sm:px-6 md:pb-12">
         <Outlet />
       </main>
+
+      <nav
+        aria-label="Navigation principale"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-overlay pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      >
+        <ul className="grid grid-cols-4">
+          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            <li key={to}>
+              <NavLink
+                to={to}
+                end={to === '/'}
+                className={({ isActive }) =>
+                  cn(
+                    'flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium transition',
+                    isActive ? 'text-accent' : 'text-fg-muted',
+                  )
+                }
+              >
+                <Icon aria-hidden="true" className="size-5" />
+                {label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   )
 }

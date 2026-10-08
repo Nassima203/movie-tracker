@@ -1,0 +1,52 @@
+import { useParams } from 'react-router'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { useSeriesDetails } from '@/features/catalog/hooks/useMediaDetails'
+import { useLibraryItem } from '@/features/library/hooks/useLibrary'
+import { airedRegularSeasons } from '@/features/library/progress'
+import { DetailHero } from '@/features/media-details/DetailHero'
+import { DetailSkeleton } from '@/features/media-details/DetailSkeleton'
+import { MediaActionsBar } from '@/features/media-details/MediaActionsBar'
+import { SeasonList } from '@/features/media-details/SeasonList'
+import { useSyncSeasonCount } from '@/features/media-details/useSyncSeasonCount'
+import { getUserMessage } from '@/lib/errors'
+import { pluralize } from '@/lib/format'
+import { parseTmdbIdParam } from './params'
+import { NotFoundPage } from './NotFoundPage'
+
+export function SeriesDetailPage() {
+  const tmdbId = parseTmdbIdParam(useParams()['id'])
+  return tmdbId === null ? <NotFoundPage /> : <SeriesDetail tmdbId={tmdbId} />
+}
+
+function SeriesDetail({ tmdbId }: { tmdbId: number }) {
+  const series = useSeriesDetails(tmdbId)
+  const { item } = useLibraryItem({ mediaType: 'tv', tmdbId })
+  useSyncSeasonCount(series.data, item)
+
+  if (series.isPending) return <DetailSkeleton />
+  if (series.isError) {
+    return (
+      <ErrorState
+        message={getUserMessage(series.error, 'Impossible de charger cette série.')}
+        onRetry={() => void series.refetch()}
+      />
+    )
+  }
+
+  const airedCount = airedRegularSeasons(series.data.seasons).length
+
+  return (
+    <>
+      <DetailHero
+        media={series.data}
+        meta={[
+          airedCount > 0 ? pluralize(airedCount, 'saison', 'saisons') : null,
+          series.data.inProduction ? 'En production' : null,
+        ]}
+      >
+        <MediaActionsBar media={series.data} item={item} />
+      </DetailHero>
+      <SeasonList series={series.data} item={item} />
+    </>
+  )
+}

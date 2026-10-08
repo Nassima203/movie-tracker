@@ -1,18 +1,14 @@
 import { supabase } from '@/lib/supabase'
+import { createDemoAuthGateway } from './gateways/demoAuthGateway'
+import { createSupabaseAuthGateway } from './gateways/supabaseAuthGateway'
 import type { OAuthProvider } from './types'
 
-export async function signInWithProvider(provider: OAuthProvider): Promise<void> {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}/login` },
-  })
+export const authGateway = supabase ? createSupabaseAuthGateway(supabase) : createDemoAuthGateway()
 
-  if (error) throw error
+export function signInWithProvider(provider: OAuthProvider): Promise<void> {
+  return authGateway.signIn(provider)
 }
 
-/** Signs out the current device only (Supabase defaults to every device). */
-export async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut({ scope: 'local' })
-
-  if (error) throw error
+export function signOut(): Promise<void> {
+  return authGateway.signOut()
 }

@@ -1,37 +1,37 @@
 import { act, render, screen } from '@testing-library/react'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
-import { fakeSession } from '../../../tests/utils/renderWithAuth'
+import { fakeUser } from '../../../tests/utils/renderWithAuth'
 import { AuthProvider } from './AuthProvider'
 import { useAuth } from './hooks/useAuth'
+import type { AuthUser } from './types'
 
-type Listener = (event: AuthChangeEvent, session: Session | null) => void
+type Listener = (user: AuthUser | null) => void
 
-const { authMock } = vi.hoisted(() => {
+const { gatewayMock } = vi.hoisted(() => {
   const state: { listener: Listener | null } = { listener: null }
   const unsubscribe = vi.fn()
   return {
-    authMock: {
+    gatewayMock: {
       state,
       unsubscribe,
-      onAuthStateChange: vi.fn((listener: Listener) => {
+      onChange: vi.fn((listener: Listener) => {
         state.listener = listener
-        return { data: { subscription: { unsubscribe } } }
+        return unsubscribe
       }),
     },
   }
 })
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { auth: { onAuthStateChange: authMock.onAuthStateChange } },
+vi.mock('./authService', () => ({
+  authGateway: { onChange: gatewayMock.onChange },
 }))
 
 function StatusProbe() {
   return <p>{useAuth().status}</p>
 }
 
-function emit(event: AuthChangeEvent, session: Session | null) {
+function emit(user: AuthUser | null) {
   act(() => {
-    authMock.state.listener?.(event, session)
+    gatewayMock.state.listener?.(user)
   })
 }
 
@@ -46,20 +46,20 @@ describe('AuthProvider', () => {
     expect(screen.getByText('loading')).toBeInTheDocument()
   })
 
-  it('follows the Supabase auth lifecycle', () => {
+  it('follows the auth lifecycle', () => {
     render(
       <AuthProvider>
         <StatusProbe />
       </AuthProvider>,
     )
 
-    emit('INITIAL_SESSION', null)
+    emit(null)
     expect(screen.getByText('anonymous')).toBeInTheDocument()
 
-    emit('SIGNED_IN', fakeSession)
+    emit(fakeUser)
     expect(screen.getByText('authenticated')).toBeInTheDocument()
 
-    emit('SIGNED_OUT', null)
+    emit(null)
     expect(screen.getByText('anonymous')).toBeInTheDocument()
   })
 
@@ -72,6 +72,6 @@ describe('AuthProvider', () => {
 
     unmount()
 
-    expect(authMock.unsubscribe).toHaveBeenCalled()
+    expect(gatewayMock.unsubscribe).toHaveBeenCalled()
   })
 })

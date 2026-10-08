@@ -68,6 +68,8 @@ export async function fetchFromTmdbProxy(
   request: TmdbProxyRequest,
   options: { signal?: AbortSignal } = {},
 ): Promise<unknown> {
+  if (!supabase) throw new TmdbProxyError('unauthorized', null, 'Supabase is not configured')
+
   const { data } = await supabase.auth.getSession()
   const accessToken = data.session?.access_token
   if (!accessToken) throw new TmdbProxyError('unauthorized', null, 'No active session')

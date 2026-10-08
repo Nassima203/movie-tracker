@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { signInWithProvider } from '@/features/auth/authService'
-import { fakeSession, renderRoutesWithAuth } from '../../tests/utils/renderWithAuth'
+import { fakeUser, renderRoutesWithAuth } from '../../tests/utils/renderWithAuth'
 import { LoginPage } from './LoginPage'
 
 vi.mock('@/features/auth/authService', () => ({
@@ -57,7 +57,7 @@ describe('LoginPage', () => {
 
   it('redirects an authenticated user to the remembered page', async () => {
     sessionStorage.setItem('uwatch:post-login-redirect', '/watchlist')
-    renderRoutesWithAuth({ status: 'authenticated', session: fakeSession }, routes, '/login')
+    renderRoutesWithAuth({ status: 'authenticated', user: fakeUser }, routes, '/login')
 
     expect(await screen.findByRole('heading', { name: 'Watchlist' })).toBeInTheDocument()
     expect(sessionStorage.getItem('uwatch:post-login-redirect')).toBeNull()

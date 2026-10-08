@@ -1,28 +1,23 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import { authGateway } from './authService'
 import { AuthContext } from './AuthContext'
 import type { AuthState } from './types'
 
 /**
- * Source of truth for the session. `onAuthStateChange` emits `INITIAL_SESSION`
- * once the stored session (or the OAuth redirect code) has been processed, so
- * the state stays `loading` until then and private pages are never flashed.
- *
- * The callback is synchronous on purpose: async callbacks are deprecated by
- * supabase-js because they can deadlock during token refresh.
+ * Source of truth for the session. The state stays `loading` until the gateway
+ * reports the initial session (stored session or OAuth redirect code), so
+ * private pages are never flashed.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' })
 
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState(session ? { status: 'authenticated', session } : { status: 'anonymous' })
-    })
-
-    return () => {
-      data.subscription.unsubscribe()
-    }
-  }, [])
+  useEffect(
+    () =>
+      authGateway.onChange((user) => {
+        setState(user ? { status: 'authenticated', user } : { status: 'anonymous' })
+      }),
+    [],
+  )
 
   return <AuthContext value={state}>{children}</AuthContext>
 }

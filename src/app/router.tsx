@@ -5,6 +5,7 @@ import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
+/** Secondary pages are code-split; the home page stays in the main bundle. */
 export const router = createBrowserRouter([
   { path: '/login', Component: LoginPage },
   {
@@ -12,7 +13,35 @@ export const router = createBrowserRouter([
     children: [
       {
         Component: AppLayout,
-        children: [{ index: true, Component: HomePage }],
+        children: [
+          { index: true, Component: HomePage },
+          {
+            path: 'search',
+            lazy: async () => ({ Component: (await import('@/pages/SearchPage')).SearchPage }),
+          },
+          {
+            path: 'watchlist',
+            lazy: async () => ({
+              Component: (await import('@/pages/WatchlistPage')).WatchlistPage,
+            }),
+          },
+          {
+            path: 'library',
+            lazy: async () => ({ Component: (await import('@/pages/LibraryPage')).LibraryPage }),
+          },
+          {
+            path: 'movie/:id',
+            lazy: async () => ({
+              Component: (await import('@/pages/MovieDetailPage')).MovieDetailPage,
+            }),
+          },
+          {
+            path: 'series/:id',
+            lazy: async () => ({
+              Component: (await import('@/pages/SeriesDetailPage')).SeriesDetailPage,
+            }),
+          },
+        ],
       },
     ],
   },

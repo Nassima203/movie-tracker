@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react'
-import { fakeSession, renderRoutesWithAuth } from '../../../../tests/utils/renderWithAuth'
+import { fakeUser, renderRoutesWithAuth } from '../../../../tests/utils/renderWithAuth'
 import type { AuthState } from '../types'
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -32,7 +32,7 @@ describe('ProtectedRoute', () => {
   })
 
   it('renders the private page for authenticated users', () => {
-    const auth: AuthState = { status: 'authenticated', session: fakeSession }
+    const auth: AuthState = { status: 'authenticated', user: fakeUser }
     renderRoutesWithAuth(auth, routes, '/watchlist')
 
     expect(screen.getByRole('heading', { name: 'Private watchlist' })).toBeInTheDocument()
