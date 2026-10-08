@@ -35,22 +35,22 @@ Sans `.env.local`, l'application utilise un petit catalogue intégré (sans affi
 
 ### Passer en mode réel
 
-Dès que `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont définies, la connexion Google/GitHub et la base de données Supabase sont utilisées (voir plus bas).
+Dès que `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont définies, la connexion par email et mot de passe et la base de données Supabase sont utilisées (voir plus bas).
 
 > Après toute modification de `.env.local`, arrêter (Ctrl+C) puis relancer `npm run dev`.
 
 ## Stack
 
-| Domaine         | Choix                                                                         |
-| --------------- | ----------------------------------------------------------------------------- |
-| Frontend        | React 19, TypeScript strict, Vite 8, Tailwind CSS v4, React Router 8 (data)   |
-| Données serveur | TanStack Query (cache, annulation, mises à jour optimistes)                   |
-| Validation      | zod (réponses TMDB, stockage local)                                           |
-| Backend         | Supabase : Auth OAuth (Google, GitHub, PKCE), PostgreSQL + Row Level Security |
-| Films/séries    | TMDB via un proxy Vercel Function (le token ne quitte jamais le serveur)      |
-| Tests           | Vitest, React Testing Library, test RLS sur PostgreSQL                        |
-| Qualité         | ESLint (typescript-eslint strict type-checked), Prettier                      |
-| Hébergement     | Vercel                                                                        |
+| Domaine         | Choix                                                                       |
+| --------------- | --------------------------------------------------------------------------- |
+| Frontend        | React 19, TypeScript strict, Vite 8, Tailwind CSS v4, React Router 8 (data) |
+| Données serveur | TanStack Query (cache, annulation, mises à jour optimistes)                 |
+| Validation      | zod (réponses TMDB, stockage local)                                         |
+| Backend         | Supabase : Auth email + mot de passe, PostgreSQL + Row Level Security       |
+| Films/séries    | TMDB via un proxy Vercel Function (le token ne quitte jamais le serveur)    |
+| Tests           | Vitest, React Testing Library, test RLS sur PostgreSQL                      |
+| Qualité         | ESLint (typescript-eslint strict type-checked), Prettier                    |
+| Hébergement     | Vercel                                                                      |
 
 ## Architecture
 
@@ -93,7 +93,7 @@ Voir [`.env.example`](./.env.example).
 
 ## Configuration Supabase
 
-> Les libellés exacts des consoles Supabase, Google et GitHub évoluent : en cas de doute, se référer à leur documentation officielle.
+> Les libellés exacts de la console Supabase évoluent : en cas de doute, se référer à leur documentation officielle.
 
 ### 1. Projet et clés
 
@@ -121,7 +121,7 @@ npx supabase gen types typescript --linked > src/types/database.ts
    ```sql
    insert into public.allowed_emails (email) values ('votre.email@exemple.com');
    ```
-   (en minuscules ; ajoutez l'email de votre compte Google **et** celui de votre compte GitHub s'ils diffèrent).
+   (en minuscules).
 2. _Authentication → Hooks_ → activer **Before User Created** → type _Postgres_ → fonction `public.hook_before_user_created`.
 
 Tout autre compte sera refusé à l'inscription.
@@ -133,17 +133,14 @@ _Authentication → URL Configuration_ :
 - **Site URL** : l'URL de production.
 - **Redirect URLs** : exactement `http://localhost:5173/login` et `https://<domaine-de-production>/login`.
 
-Éviter les wildcards larges (`https://*.vercel.app/**`) : n'importe quel déploiement Vercel pourrait recevoir un code OAuth.
+Éviter les wildcards larges (`https://*.vercel.app/**`) : n'importe quel déploiement Vercel pourrait recevoir un lien de connexion.
 
-## Configuration OAuth
+## Connexion par email et mot de passe
 
-Les deux fournisseurs utilisent la même URL de callback : `https://<project-ref>.supabase.co/auth/v1/callback`.
-
-**Google** : [Google Cloud Console](https://console.cloud.google.com/) → écran de consentement OAuth → _Credentials → Create OAuth client ID_ (_Web application_) → _Authorized redirect URI_ = callback ci-dessus → copier Client ID / Secret dans Supabase → _Authentication → Sign In / Providers → Google_.
-
-**GitHub** : _Settings → Developer settings → OAuth Apps → New OAuth App_ → _Authorization callback URL_ = callback ci-dessus → copier Client ID / Secret dans Supabase → _Providers → GitHub_.
-
-Les secrets OAuth restent dans Supabase : jamais dans ce dépôt ni dans le frontend.
+- Le fournisseur **Email** est activé par défaut dans Supabase (_Authentication → Sign In / Providers → Email_).
+- **Confirm email** (activé par défaut) : à la création du compte, Supabase envoie un lien de confirmation qui ramène sur `/login`. Gardez-le activé : il empêche quelqu'un de créer un compte avec votre adresse sans y avoir accès.
+- Seules les adresses de `allowed_emails` peuvent créer un compte (hook _Before User Created_).
+- Le service d'email intégré de Supabase est limité à quelques envois par heure : suffisant pour un usage personnel.
 
 ## Configuration TMDB
 
