@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+/*
+ * Themes are driven by the `data-theme` attribute on <html>.
+ * Night mode is the default; light mode and future themes only redefine tokens.
+ */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --color-surface: var(--uw-surface);
+  --color-surface-raised: var(--uw-surface-raised);
+  --color-fg: var(--uw-fg);
+  --color-fg-muted: var(--uw-fg-muted);
+  --color-border: var(--uw-border);
+  --color-accent: var(--uw-accent);
+  --color-accent-fg: var(--uw-accent-fg);
+}
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --uw-surface: #0b0b10;
+  --uw-surface-raised: #16161e;
+  --uw-fg: #f4f4f6;
+  --uw-fg-muted: #a1a1ad;
+  --uw-border: #2a2a35;
+  --uw-accent: #e8b04a;
+  --uw-accent-fg: #0b0b10;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --uw-surface: #fafafa;
+  --uw-surface-raised: #ffffff;
+  --uw-fg: #111116;
+  --uw-fg-muted: #55555f;
+  --uw-border: #e2e2e8;
+  --uw-accent: #8a5a00;
+  --uw-accent-fg: #ffffff;
+}
+
+@layer base {
+  body {
+    @apply min-h-dvh bg-surface text-fg antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
