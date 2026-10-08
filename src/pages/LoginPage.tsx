@@ -39,10 +39,8 @@ export function LoginPage() {
         </div>
 
         <div className="flex w-full flex-col gap-1 text-center">
-          <h2 className="text-lg font-semibold">Se connecter ou créer un compte</h2>
-          <p className="text-sm text-fg-muted">
-            Votre compte est créé automatiquement à la première connexion.
-          </p>
+          <h2 className="text-lg font-semibold">Bienvenue</h2>
+          <p className="text-sm text-fg-muted">Connectez-vous ou créez votre compte.</p>
         </div>
 
         <LoginPanel
@@ -52,8 +50,9 @@ export function LoginPage() {
 
         {isDemoMode && (
           <p className="rounded-xl bg-accent/10 px-4 py-3 text-center text-xs text-fg ring-1 ring-accent/30">
-            <strong className="font-semibold">Mode démo</strong> : Supabase n’est pas configuré. La
-            connexion est simulée et vos données restent dans ce navigateur.
+            <strong className="font-semibold">Mode démo</strong> : Supabase n’est pas configuré.
+            N’importe quel email et mot de passe fonctionnent, et vos données restent dans ce
+            navigateur.
           </p>
         )}
 

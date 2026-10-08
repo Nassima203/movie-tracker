@@ -53,6 +53,13 @@ export function createDemoAuthGateway(): AuthGateway {
       return Promise.resolve()
     },
 
+    signUp() {
+      signedIn = true
+      writeSignedIn(true)
+      emit()
+      return Promise.resolve({ status: 'signed_in' })
+    },
+
     signOut() {
       signedIn = false
       writeSignedIn(false)
