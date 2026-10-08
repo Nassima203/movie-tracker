@@ -3,7 +3,7 @@
  * enable it: the overlay keeps text readable in both themes, and without the
  * file only the gradients are shown.
  */
-const BACKGROUND_IMAGE = '/images/home-cinema.webp'
+const BACKGROUND_IMAGE = `${import.meta.env.BASE_URL}images/home-cinema.webp`
 
 export function AppBackdrop() {
   return (
