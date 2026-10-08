@@ -9,7 +9,7 @@ export function AppBackdrop() {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div
-        className="absolute inset-0 scale-105 bg-cover bg-center opacity-60 blur-[2px] dark:opacity-70"
+        className="absolute inset-0 bg-cover bg-[center_65%] opacity-20 grayscale dark:opacity-100 dark:grayscale-0"
         style={{ backgroundImage: `url(${BACKGROUND_IMAGE})` }}
       />
       <div className="absolute inset-0" style={{ background: 'var(--uw-backdrop-overlay)' }} />
