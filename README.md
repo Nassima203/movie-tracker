@@ -1,26 +1,57 @@
 # uwatch
 
-Application web personnelle pour suivre les films et séries : ce que j'ai vu, ce que je veux voir, et où j'en suis dans mes séries.
+Application web personnelle pour suivre ses films et séries : **ce que j'ai vu, ce que je veux voir, et où j'en suis dans mes séries.**
 
-> Projet en cours de développement : voir l'état d'avancement ci-dessous.
+- Recherche TMDB instantanée (dès la première lettre), au clavier comme à la souris
+- Films : « À voir » / « Vu »
+- Séries : suivi saison par saison, « Tout marquer vu », progression
+- Bibliothèque filtrable, liste « À voir », séries en cours
+- Mode nuit (par défaut) et mode jour, responsive mobile-first, accessible
+
+## Essayer sans rien configurer : le mode démo
+
+Sans variables Supabase, uwatch démarre en **mode démo** :
+
+- connexion simulée (les boutons Google/GitHub ne contactent aucun service) ;
+- bibliothèque stockée dans le `localStorage` du navigateur ;
+- petit catalogue intégré (sans affiches) à la place de TMDB.
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
+```
+
+Le mode démo sert à juger l'interface. Dès que `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont définies, l'application passe en mode réel (Supabase + TMDB).
 
 ## Stack
 
-- React + TypeScript (strict) + Vite
-- Tailwind CSS v4
-- React Router (mode data)
-- Supabase (Auth OAuth Google/GitHub en PKCE ; PostgreSQL + Row Level Security en phase 3)
-- TMDB via un proxy Vercel Function (le token TMDB ne quitte jamais le serveur) — phase 4
-- Vitest + React Testing Library
-- ESLint (typescript-eslint strict, type-checked) + Prettier
-- Hébergement : Vercel
+| Domaine         | Choix                                                                         |
+| --------------- | ----------------------------------------------------------------------------- |
+| Frontend        | React 19, TypeScript strict, Vite 8, Tailwind CSS v4, React Router 8 (data)   |
+| Données serveur | TanStack Query (cache, annulation, mises à jour optimistes)                   |
+| Validation      | zod (réponses TMDB, stockage local)                                           |
+| Backend         | Supabase : Auth OAuth (Google, GitHub, PKCE), PostgreSQL + Row Level Security |
+| Films/séries    | TMDB via un proxy Vercel Function (le token ne quitte jamais le serveur)      |
+| Tests           | Vitest, React Testing Library, test RLS sur PostgreSQL                        |
+| Qualité         | ESLint (typescript-eslint strict type-checked), Prettier                      |
+| Hébergement     | Vercel                                                                        |
 
-## Prérequis
+## Architecture
 
-- Node.js `>=22.22.0` (voir `.nvmrc`)
-- npm
+```
+Navigateur (SPA React)
+  ├── supabase-js (clé publishable) ──► Supabase Auth + PostgreSQL (RLS)
+  ├── /api/tmdb (Vercel Function) ────► api.themoviedb.org  (token serveur)
+  └── image.tmdb.org (affiches, public)
+```
 
-## Installation
+- **Sécurité des données** : assurée par PostgreSQL. Chaque table utilisateur a la RLS activée avec des politiques explicites par opération ; `user_id` vaut `auth.uid()` par défaut et est revérifié (`WITH CHECK`). Le client n'envoie jamais de `user_id`.
+- **Proxy TMDB** (`api/tmdb.ts`, `server/tmdb/`) : liste blanche de ressources (`search`, `movie`, `tv`, `season`), paramètres validés, session Supabase obligatoire (rôle `authenticated` vérifié), timeout, erreurs assainies.
+- **Accès restreint** : seuls les emails de la table `allowed_emails` peuvent créer un compte (Auth Hook).
+
+## Installation (mode réel)
+
+Prérequis : Node.js `>=22.22.0` (voir `.nvmrc`).
 
 ```bash
 npm install
@@ -28,112 +59,148 @@ cp .env.example .env.local   # puis compléter les valeurs
 npm run dev
 ```
 
+En développement, `/api/tmdb` est servi par le serveur Vite lui-même (middleware de dev) : pas besoin du CLI Vercel.
+
 ## Variables d'environnement
 
 Voir [`.env.example`](./.env.example).
 
-- Les variables `VITE_*` sont **publiques** : elles sont incluses dans le bundle navigateur.
-- Les secrets (ex. `TMDB_READ_ACCESS_TOKEN`) ne doivent **jamais** être préfixés par `VITE_`.
+| Variable                        | Où                 | Secret ?                    |
+| ------------------------------- | ------------------ | --------------------------- |
+| `VITE_SUPABASE_URL`             | navigateur + proxy | non                         |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | navigateur + proxy | non (protégé par la RLS)    |
+| `TMDB_READ_ACCESS_TOKEN`        | serveur uniquement | **oui** — jamais en `VITE_` |
+
+- Les variables `VITE_*` sont incluses dans le bundle navigateur : elles doivent être publiques.
 - Aucun fichier `.env*` (hors `.env.example`) n'est versionné.
+- Ne jamais utiliser la clé secrète Supabase (`sb_secret_…`) ni la clé legacy `service_role` dans ce projet.
 
-## Configuration Supabase & OAuth
+## Configuration Supabase
 
-> Les libellés exacts du Dashboard Supabase, de Google Cloud et de GitHub évoluent : en cas de doute, se référer à leur documentation officielle.
+> Les libellés exacts des consoles Supabase, Google et GitHub évoluent : en cas de doute, se référer à leur documentation officielle.
 
-### 1. Projet Supabase
+### 1. Projet et clés
 
 1. Créer un projet sur [supabase.com](https://supabase.com).
-2. Récupérer l'**URL du projet** et la **clé publishable** (`sb_publishable_…`) depuis le bouton _Connect_ ou _Settings → API Keys_.
-3. Les renseigner dans `.env.local` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`).
-4. Ne jamais utiliser la clé secrète (`sb_secret_…`) ni la clé legacy `service_role` dans le frontend : elles contournent la RLS.
+2. Récupérer l'**URL du projet** et la **clé publishable** (`sb_publishable_…`) via _Connect_ ou _Settings → API Keys_.
 
-### 2. URLs de redirection
+### 2. Base de données
 
-Dans _Authentication → URL Configuration_ :
+Appliquer la migration `supabase/migrations/20261008120000_init_library.sql` :
 
-- **Site URL** : l'URL de production (ex. `https://uwatch.example.com`).
-- **Redirect URLs** : ajouter exactement
-  - `http://localhost:5173/login`
-  - `https://<domaine-de-production>/login`
+- soit avec le CLI : `npx supabase link --project-ref <ref>` puis `npx supabase db push` (si le CLI réclame un `supabase/config.toml`, lancer d'abord `npx supabase init` : il conserve le dossier `migrations/`) ;
+- soit en collant le fichier dans le _SQL Editor_ du Dashboard.
 
-Éviter les wildcards larges (`https://*.vercel.app/**`) : ils permettraient à n'importe quel déploiement Vercel de recevoir un code OAuth.
+Elle crée `library_items`, `watched_seasons`, `allowed_emails`, les contraintes, index, politiques RLS et la fonction `hook_before_user_created`.
 
-### 3. Google
+Les types TypeScript (`src/types/database.ts`) correspondent à la migration ; une fois le projet lié, ils peuvent être régénérés :
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → _APIs & Services_ → écran de consentement OAuth, puis _Credentials → Create OAuth client ID_ (type _Web application_).
-2. **Authorized redirect URI** : `https://<project-ref>.supabase.co/auth/v1/callback`.
-3. Copier le _Client ID_ et le _Client secret_ dans Supabase → _Authentication → Sign In / Providers → Google_.
+```bash
+npx supabase gen types typescript --linked > src/types/database.ts
+```
 
-### 4. GitHub
+### 3. Restreindre l'accès à votre compte
 
-1. GitHub → _Settings → Developer settings → OAuth Apps → New OAuth App_.
-2. **Authorization callback URL** : `https://<project-ref>.supabase.co/auth/v1/callback`.
-3. Copier le _Client ID_ et générer un _Client secret_, puis les saisir dans Supabase → _Authentication → Sign In / Providers → GitHub_.
+1. Dans le _SQL Editor_ :
+   ```sql
+   insert into public.allowed_emails (email) values ('votre.email@exemple.com');
+   ```
+   (en minuscules ; ajoutez l'email de votre compte Google **et** celui de votre compte GitHub s'ils diffèrent).
+2. _Authentication → Hooks_ → activer **Before User Created** → type _Postgres_ → fonction `public.hook_before_user_created`.
 
-Les secrets OAuth restent dans Supabase : ils ne sont jamais présents dans ce dépôt ni dans le frontend.
+Tout autre compte sera refusé à l'inscription.
 
-### 5. Restriction d'accès
+### 4. URLs de redirection
 
-uwatch est une application personnelle. La restriction des inscriptions à une liste d'emails autorisés (Auth Hook) sera ajoutée en phase 3. D'ici là, n'exposez pas l'application publiquement.
+_Authentication → URL Configuration_ :
 
-## Authentification : fonctionnement
+- **Site URL** : l'URL de production.
+- **Redirect URLs** : exactement `http://localhost:5173/login` et `https://<domaine-de-production>/login`.
 
-- Flow OAuth **PKCE** (`src/lib/supabase.ts`) ; la session est persistée et rafraîchie automatiquement par supabase-js.
-- `AuthProvider` expose un état `loading | authenticated | anonymous` alimenté par `onAuthStateChange`.
-- `ProtectedRoute` n'affiche jamais une page privée tant que la session n'est pas confirmée, et redirige vers `/login` sinon.
-- La page demandée est mémorisée (chemin interne validé, anti open-redirect) puis restaurée après connexion.
-- La déconnexion ne concerne que l'appareil courant (`scope: 'local'`).
+Éviter les wildcards larges (`https://*.vercel.app/**`) : n'importe quel déploiement Vercel pourrait recevoir un code OAuth.
+
+## Configuration OAuth
+
+Les deux fournisseurs utilisent la même URL de callback : `https://<project-ref>.supabase.co/auth/v1/callback`.
+
+**Google** : [Google Cloud Console](https://console.cloud.google.com/) → écran de consentement OAuth → _Credentials → Create OAuth client ID_ (_Web application_) → _Authorized redirect URI_ = callback ci-dessus → copier Client ID / Secret dans Supabase → _Authentication → Sign In / Providers → Google_.
+
+**GitHub** : _Settings → Developer settings → OAuth Apps → New OAuth App_ → _Authorization callback URL_ = callback ci-dessus → copier Client ID / Secret dans Supabase → _Providers → GitHub_.
+
+Les secrets OAuth restent dans Supabase : jamais dans ce dépôt ni dans le frontend.
+
+## Configuration TMDB
+
+1. Créer un compte sur [themoviedb.org](https://www.themoviedb.org/), puis _Paramètres → API_ et accepter les conditions d'utilisation.
+2. Copier le **API Read Access Token** dans `TMDB_READ_ACCESS_TOKEN` (`.env.local` en local, variables d'environnement Vercel en production).
+3. Attribution obligatoire : la mention TMDB est affichée sur la page de connexion. Vérifier les conditions TMDB en vigueur avant toute mise en production publique.
+
+Langue des données : `fr-FR` (constante `TMDB_LANGUAGE` dans `server/tmdb/routes.ts`).
+
+## Image de fond
+
+Déposer une photo de home cinéma dans `public/images/home-cinema.webp` (WebP compressé, ~1920 px de large, < 300 Ko conseillé). Un overlay garantit la lisibilité dans les deux thèmes ; sans fichier, seuls les dégradés s'affichent.
 
 ## Scripts
 
-| Commande               | Rôle                                   |
-| ---------------------- | -------------------------------------- |
-| `npm run dev`          | Serveur de développement               |
-| `npm run build`        | Vérification des types + build de prod |
-| `npm run preview`      | Prévisualisation du build              |
-| `npm run typecheck`    | Vérification TypeScript                |
-| `npm run lint`         | ESLint                                 |
-| `npm run format`       | Formatage Prettier                     |
-| `npm run format:check` | Vérification du formatage              |
-| `npm test`             | Tests (Vitest)                         |
-| `npm run test:watch`   | Tests en mode watch                    |
+| Commande            | Rôle                                                     |
+| ------------------- | -------------------------------------------------------- |
+| `npm run dev`       | Serveur de développement (+ proxy `/api/tmdb`)           |
+| `npm run build`     | Vérification des types + build de production             |
+| `npm run preview`   | Prévisualisation du build                                |
+| `npm run typecheck` | Vérification TypeScript (app, serveur, config)           |
+| `npm run lint`      | ESLint                                                   |
+| `npm run format`    | Formatage Prettier                                       |
+| `npm test`          | Tests (Vitest)                                           |
+| `npm run test:db`   | Migration + test RLS sur un PostgreSQL local (`PGHOST`…) |
+
+## Tests
+
+- **Unitaires / comportement** (`npm test`) : debounce, recherche (états, annulation des requêtes obsolètes), combobox clavier, actions (doublons, rollback), saisons, thème, auth (session, routes protégées, redirections), proxy TMDB (validation, auth, erreurs), parsing TMDB, configuration de déploiement.
+- **Base de données** (`npm run test:db`) : applique les migrations sur une base jetable avec un stub de l'environnement Supabase et vérifie l'isolation entre utilisateurs, l'usurpation de `user_id`, les doublons, les cascades et le hook d'inscription.
+
+## Déploiement Vercel
+
+1. Importer le dépôt dans Vercel (preset **Vite** détecté ; `vercel.json` fixe build et sortie).
+2. Définir les variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` et `TMDB_READ_ACCESS_TOKEN` (_Settings → Environment Variables_).
+3. Ajouter le domaine de production aux Redirect URLs Supabase.
+
+`vercel.json` fournit :
+
+- la réécriture SPA (toutes les routes sauf `/api/*` → `index.html`) ;
+- des en-têtes de sécurité, dont une **CSP stricte**. Le script inline de `index.html` (application du thème sans flash) y est autorisé par son empreinte SHA-256 : si vous le modifiez, mettez à jour l'empreinte (un test échoue sinon).
+
+> Les requêtes au proxy portent un en-tête `Authorization` : le CDN Vercel ne les met pas en cache. Le cache est assuré côté navigateur (`Cache-Control: private`) et par TanStack Query.
 
 ## Structure
 
 ```
-public/
-  images/            # image de fond home cinema (à fournir : home-cinema.webp)
+api/tmdb.ts                 Vercel Function (proxy TMDB)
+server/
+  tmdb/                     logique du proxy (routes, auth, handler) — testée
+  dev/apiDevPlugin.ts       sert /api/tmdb dans `vite dev`
+supabase/
+  migrations/               schéma, RLS, allowlist, hook
+  tests/                    test RLS (stub Supabase + scénarios)
 src/
-  app/               # App, routeur
+  app/                      App, providers, routeur, QueryClient
   components/
-    layout/          # AppLayout (header, contenu)
-    ui/              # Button, Spinner, FullPageLoader
+    layout/                 AppLayout, fond, navigation, menu utilisateur
+    media/                  PosterImage, PosterCard, MediaGrid
+    ui/                     Button, Badge, Skeleton, EmptyState, Toast…
   features/
-    auth/            # AuthProvider, hooks, routes protégées, service OAuth
-  lib/               # client Supabase, variables d'environnement, utilitaires
-  pages/             # pages routées (Login, Home, 404)
-  styles/            # CSS global et tokens de thème
-  main.tsx
-tests/               # configuration et utilitaires de test
+    auth/                   AuthProvider, passerelles Supabase/démo, routes protégées
+    catalog/                sources TMDB (proxy/démo), schémas zod, hooks de détails
+    library/                dépôts Supabase/démo, mutations, progression, filtres
+    media-details/          fiches film/série, liste des saisons
+    search/                 useTmdbSearch, SearchCombobox
+    theme/                  thèmes, persistance, toggle
+  hooks/useDebounce.ts
+  lib/                      env, client Supabase, client du proxy, erreurs, images
+  pages/                    pages routées
+  types/                    types métier et base de données
+tests/                      utilitaires de test et tests de configuration
 ```
-
-Les autres dossiers (`hooks/`, `types/`, `supabase/`, autres features) seront créés au fil des phases, lorsqu'ils auront un contenu réel.
-
-## Thèmes
-
-Le thème est piloté par l'attribut `data-theme` sur `<html>` (`dark` par défaut, `light`). Les couleurs sont des tokens CSS (`--uw-*`) exposés à Tailwind (`bg-surface`, `text-fg`, `text-accent`…) : ajouter un thème revient à redéfinir ces tokens.
-
-## Avancement
-
-- [x] Phase 1 — Initialisation (Vite, React, TypeScript, Tailwind, ESLint, Prettier, Vitest)
-- [x] Phase 2 — Supabase & Auth (OAuth Google/GitHub, session, routes protégées)
-- [ ] Phase 3 — Base de données, migrations, RLS
-- [ ] Phase 4 — TMDB (proxy, types, recherche)
-- [ ] Phase 5 — UX de recherche
-- [ ] Phase 6 — Bibliothèque
-- [ ] Phase 7 — Design
-- [ ] Phase 8 — Qualité
-- [ ] Phase 9 — Production
 
 ## Données
 
