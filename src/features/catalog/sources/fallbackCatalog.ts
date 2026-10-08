@@ -6,7 +6,7 @@ export type CatalogOrigin = 'tmdb' | 'demo'
 /**
  * Demo mode only: uses TMDB through the proxy when it is available (local dev
  * with a TMDB token) and switches to the built-in catalog for good as soon as
- * the proxy reports that TMDB is not configured.
+ * the proxy reports that TMDB is not configured (or has no /api route at all).
  */
 export function createFallbackCatalog(
   primary: CatalogSource,
@@ -19,7 +19,11 @@ export function createFallbackCatalog(
     try {
       return await call(primary)
     } catch (error) {
-      if (error instanceof TmdbProxyError && error.kind === 'not_configured') {
+      // `network`: the app's own /api route cannot be reached at all (static host).
+      if (
+        error instanceof TmdbProxyError &&
+        (error.kind === 'not_configured' || error.kind === 'network')
+      ) {
         useFallback = true
         return call(fallback)
       }
