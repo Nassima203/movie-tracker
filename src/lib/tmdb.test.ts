@@ -43,7 +43,7 @@ describe('fetchFromTmdbProxy', () => {
     [504, 'timeout'],
   ] as const)('maps HTTP %i to %s', async (status, kind) => {
     mockSession('user-jwt')
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({}, { status }))
 
     const error: unknown = await fetchFromTmdbProxy({ resource: 'tv', id: 1 }).catch(
       (e: unknown) => e,
@@ -71,6 +71,28 @@ describe('fetchFromTmdbProxy', () => {
 
     await expect(fetchFromTmdbProxy({ resource: 'movie', id: 1 })).rejects.toMatchObject({
       kind: 'network',
+    })
+  })
+
+  it('reports a proxy without TMDB token as not configured', async () => {
+    mockSession('user-jwt')
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json({ error: { code: 'server_misconfigured' } }, { status: 500 }),
+    )
+
+    await expect(fetchFromTmdbProxy({ resource: 'trending' })).rejects.toMatchObject({
+      kind: 'not_configured',
+    })
+  })
+
+  it('reports a host without the proxy (HTML answer) as not configured', async () => {
+    mockSession('user-jwt')
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<!doctype html>', { headers: { 'Content-Type': 'text/html' } }),
+    )
+
+    await expect(fetchFromTmdbProxy({ resource: 'trending' })).rejects.toMatchObject({
+      kind: 'not_configured',
     })
   })
 })

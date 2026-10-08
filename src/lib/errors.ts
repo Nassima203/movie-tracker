@@ -21,6 +21,8 @@ export function getUserMessage(
         return 'Impossible de joindre le service de films.'
       case 'not_found':
         return 'Ce titre est introuvable.'
+      case 'not_configured':
+        return 'Le service de films n’est pas encore configuré.'
       case 'invalid_request':
       case 'server':
         return fallback

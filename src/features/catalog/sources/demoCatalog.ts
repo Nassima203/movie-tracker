@@ -276,6 +276,14 @@ export const demoCatalog: CatalogSource = {
     return delay(results, signal)
   },
 
+  trending(signal) {
+    const mixed = movies.flatMap((movie, index) => {
+      const show = series[index]
+      return show ? [movieSummary(movie), seriesSummary(show)] : [movieSummary(movie)]
+    })
+    return delay(mixed, signal)
+  },
+
   getMovie(tmdbId, signal) {
     const movie = movies.find((item) => item.id === tmdbId)
     if (!movie) return Promise.reject(notFound())

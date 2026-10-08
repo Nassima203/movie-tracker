@@ -38,6 +38,13 @@ export function LoginPage() {
           <p className="mt-3 text-fg-muted">Ce que j’ai vu, ce que je veux voir, où j’en suis.</p>
         </div>
 
+        <div className="flex w-full flex-col gap-1 text-center">
+          <h2 className="text-lg font-semibold">Se connecter ou créer un compte</h2>
+          <p className="text-sm text-fg-muted">
+            Votre compte est créé automatiquement à la première connexion.
+          </p>
+        </div>
+
         <LoginPanel
           redirectTo={readFromState(location.state)}
           initialError={getOAuthErrorMessage(location)}

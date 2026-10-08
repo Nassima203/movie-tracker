@@ -16,3 +16,11 @@ export function useSeriesDetails(tmdbId: number) {
     staleTime: DETAILS_STALE_TIME,
   })
 }
+
+export function useTrending() {
+  return useQuery({
+    queryKey: catalogKeys.trending,
+    queryFn: ({ signal }) => catalog.trending(signal),
+    staleTime: DETAILS_STALE_TIME,
+  })
+}

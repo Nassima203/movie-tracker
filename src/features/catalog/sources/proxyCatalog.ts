@@ -8,6 +8,11 @@ export const proxyCatalog: CatalogSource = {
     return parseSearchResponse(payload)
   },
 
+  async trending(signal) {
+    const payload = await fetchFromTmdbProxy({ resource: 'trending' }, signalOption(signal))
+    return parseSearchResponse(payload)
+  },
+
   async getMovie(tmdbId, signal) {
     const payload = await fetchFromTmdbProxy(
       { resource: 'movie', id: tmdbId },

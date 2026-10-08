@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router'
+import { NavLink, Outlet, useMatch } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { SearchCombobox } from '@/features/search/components/SearchCombobox'
 import { ThemeToggle } from '@/features/theme/ThemeToggle'
@@ -10,6 +10,9 @@ import { NAV_ITEMS } from './navItems'
 import { UserMenu } from './UserMenu'
 
 export function AppLayout() {
+  // The home page has its own large search box.
+  const isHome = useMatch('/') !== null
+
   return (
     <div className="flex min-h-dvh flex-col">
       <AppBackdrop />
@@ -50,11 +53,13 @@ export function AppLayout() {
             </ul>
           </nav>
 
-          <div className="ml-auto hidden w-full max-w-md md:block">
-            <SearchCombobox variant="popover" />
-          </div>
+          {!isHome && (
+            <div className="ml-auto hidden w-full max-w-md md:block">
+              <SearchCombobox variant="popover" />
+            </div>
+          )}
 
-          <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <div className={cn('ml-auto flex items-center gap-1', !isHome && 'md:ml-0')}>
             <ThemeToggle />
             <UserMenu />
           </div>

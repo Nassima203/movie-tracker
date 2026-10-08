@@ -16,6 +16,8 @@ interface SearchComboboxProps {
   variant: 'popover' | 'inline'
   autoFocus?: boolean
   maxResults?: number
+  /** Larger input, e.g. in the home page hero. Defaults to large for `inline`. */
+  size?: 'md' | 'lg'
 }
 
 interface ActiveCell {
@@ -47,6 +49,7 @@ export function SearchCombobox({
   variant,
   autoFocus = false,
   maxResults = 8,
+  size = variant === 'inline' ? 'lg' : 'md',
 }: SearchComboboxProps) {
   const [input, setInput] = useState('')
   const [isOpen, setIsOpen] = useState(variant === 'inline')
@@ -141,7 +144,7 @@ export function SearchCombobox({
       <div
         className={cn(
           'flex items-center gap-2 rounded-full border border-border bg-surface-overlay px-4 backdrop-blur-md transition focus-within:border-accent/60 focus-within:bg-surface-raised',
-          variant === 'inline' ? 'h-14' : 'h-11',
+          size === 'lg' ? 'h-14' : 'h-11',
         )}
       >
         <Search aria-hidden="true" className="size-5 shrink-0 text-fg-muted" />
@@ -173,7 +176,7 @@ export function SearchCombobox({
           onKeyDown={onKeyDown}
           className={cn(
             'min-w-0 flex-1 bg-transparent outline-none placeholder:text-fg-muted [&::-webkit-search-cancel-button]:hidden',
-            variant === 'inline' ? 'text-lg' : 'text-sm',
+            size === 'lg' ? 'text-lg' : 'text-sm',
           )}
         />
         {search.isRefreshing && <Spinner className="size-4 text-fg-muted" />}

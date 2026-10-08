@@ -1,20 +1,34 @@
 import { Skeleton } from '@/components/ui/Skeleton'
-import { mediaKey, type LibraryItem } from '@/types/media'
+import { mediaKey, type LibraryItem, type MediaSummary } from '@/types/media'
 import { PosterCard } from './PosterCard'
 
 const GRID =
   'grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
 
-export function MediaGrid({ items }: { items: LibraryItem[] }) {
+interface MediaGridProps {
+  items: MediaSummary[]
+  /** Library entries by media key, to show the user's status on each poster. */
+  library?: Map<string, LibraryItem>
+}
+
+export function MediaGrid({ items, library }: MediaGridProps) {
   return (
     <ul className={GRID}>
-      {items.map((item) => (
-        <li key={mediaKey(item)} className="animate-fade-in">
-          <PosterCard item={item} />
-        </li>
-      ))}
+      {items.map((media) => {
+        const key = mediaKey(media)
+        const item = library?.get(key) ?? (isLibraryItem(media) ? media : null)
+        return (
+          <li key={key} className="animate-fade-in">
+            <PosterCard media={media} item={item} />
+          </li>
+        )
+      })}
     </ul>
   )
+}
+
+function isLibraryItem(media: MediaSummary): media is LibraryItem {
+  return 'status' in media
 }
 
 export function MediaGridSkeleton({ count = 12 }: { count?: number }) {
