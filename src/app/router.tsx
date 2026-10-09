@@ -1,3 +1,8 @@
+/**
+ * Définition des routes (URL → page) de l'application.
+ * Les pages de l'application sont protégées : `ProtectedRoute` redirige vers
+ * la connexion si l'utilisateur n'est pas authentifié.
+ */
 import { createBrowserRouter } from 'react-router'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
@@ -5,7 +10,11 @@ import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
-/** Secondary pages are code-split; the home page stays in the main bundle. */
+/**
+ * Routeur de l'application.
+ * Les pages secondaires sont chargées à la demande (`lazy`, découpage du code) pour
+ * alléger le premier chargement ; la page d'accueil reste dans le paquet principal.
+ */
 export const router = createBrowserRouter([
   { path: '/login', Component: LoginPage },
   {
@@ -14,10 +23,12 @@ export const router = createBrowserRouter([
       Component: (await import('@/pages/ResetPasswordPage')).ResetPasswordPage,
     }),
   },
+  // Toutes les routes ci-dessous exigent une session (sauf en mode démo).
   {
     Component: ProtectedRoute,
     children: [
       {
+        // Mise en page commune (en-tête, navigation) autour de chaque page.
         Component: AppLayout,
         children: [
           { index: true, Component: HomePage },
@@ -57,5 +68,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  // Toute URL inconnue affiche la page « introuvable ».
   { path: '*', Component: NotFoundPage },
 ])

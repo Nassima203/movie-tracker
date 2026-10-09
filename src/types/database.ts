@@ -1,8 +1,9 @@
 /**
- * Database types for supabase/migrations.
+ * Types TypeScript de la base de données Supabase (voir supabase/migrations).
+ * Ils décrivent les tables telles qu'elles sont stockées et typent le client Supabase.
  *
- * Written by hand to match the migration. Once the Supabase project is linked,
- * regenerate with: npx supabase gen types typescript --linked > src/types/database.ts
+ * Écrits à la main pour correspondre à la migration. Une fois le projet Supabase lié,
+ * on peut les régénérer avec : npx supabase gen types typescript --linked > src/types/database.ts
  */
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 

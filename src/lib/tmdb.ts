@@ -1,23 +1,36 @@
+/**
+ * Client du proxy TMDB de uwatch (`/api/tmdb`).
+ *
+ * Le navigateur n'appelle jamais TMDB directement : il passe par notre propre
+ * route serveur, qui détient la clé TMDB secrète. Ce module construit la
+ * requête, ajoute le jeton de session et transforme chaque échec en une
+ * `TmdbProxyError` typée, facile à traduire en message utilisateur.
+ */
 import { supabase } from '@/lib/supabase'
 
-/** Requests accepted by the `/api/tmdb` proxy (see server/tmdb/routes.ts). */
-export type TmdbProxyRequest =
+/** Requêtes acceptées par le proxy `/api/tmdb` (voir server/tmdb/routes.ts). */
+type TmdbProxyRequest =
   | { resource: 'search'; query: string; page?: number }
   | { resource: 'trending' }
   | { resource: 'movie' | 'tv'; id: number }
   | { resource: 'season'; id: number; season: number }
 
-export type TmdbProxyErrorKind =
+/** Catégories d'erreur possibles lors d'un appel au proxy. */
+type TmdbProxyErrorKind =
   | 'unauthorized'
   | 'invalid_request'
   | 'not_found'
   | 'rate_limited'
   | 'timeout'
   | 'network'
-  /** No usable proxy: TMDB token missing, or no /api route at all (static preview). */
+  /** Aucun proxy utilisable : jeton TMDB manquant, ou pas de route /api du tout (aperçu statique). */
   | 'not_configured'
   | 'server'
 
+/**
+ * Erreur levée par `fetchFromTmdbProxy`. `kind` indique la cause (pour choisir
+ * le message à afficher) et `status` le code HTTP quand il y en a un.
+ */
 export class TmdbProxyError extends Error {
   readonly kind: TmdbProxyErrorKind
   readonly status: number | null
@@ -30,8 +43,10 @@ export class TmdbProxyError extends Error {
   }
 }
 
+/** Délai maximal d'attente d'une réponse, pour ne pas laisser l'interface bloquée. */
 const CLIENT_TIMEOUT_MS = 10_000
 
+/** Transforme la requête en paramètres d'URL (`?resource=...&id=...`). */
 function toSearchParams(request: TmdbProxyRequest): URLSearchParams {
   const params = new URLSearchParams({ resource: request.resource })
 
@@ -55,6 +70,7 @@ function toSearchParams(request: TmdbProxyRequest): URLSearchParams {
   return params
 }
 
+/** Déduit la catégorie d'erreur à partir du code HTTP de la réponse. */
 function kindFromStatus(status: number): TmdbProxyErrorKind {
   if (status === 401) return 'unauthorized'
   if (status === 400) return 'invalid_request'
@@ -64,6 +80,11 @@ function kindFromStatus(status: number): TmdbProxyErrorKind {
   return 'server'
 }
 
+/**
+ * Lit le code d'erreur renvoyé par le proxy (`{ error: { code: '...' } }`).
+ * Le corps n'est pas fiable : on vérifie chaque niveau et on renvoie `null`
+ * au moindre doute plutôt que de planter.
+ */
 async function readErrorCode(response: Response): Promise<string | null> {
   try {
     const body: unknown = await response.json()
@@ -76,16 +97,17 @@ async function readErrorCode(response: Response): Promise<string | null> {
   }
 }
 
+/** Indique si la réponse annonce du JSON (en-tête `Content-Type`). */
 function isJson(response: Response): boolean {
   return response.headers.get('content-type')?.includes('application/json') ?? false
 }
 
 /**
- * Calls the uwatch TMDB proxy. With Supabase configured, the session token is
- * required and attached; without it (local demo), the request is anonymous and
- * the development proxy decides whether TMDB is available.
- * Returns untyped JSON: callers must validate it before use.
- * An abort triggered by the caller's `signal` is rethrown untouched.
+ * Appelle le proxy TMDB de uwatch. Avec Supabase configuré, le jeton de session
+ * est obligatoire et envoyé ; sans Supabase (démo locale), la requête est anonyme
+ * et c'est le proxy de développement qui décide si TMDB est disponible.
+ * Renvoie du JSON non typé : l'appelant doit le valider avant de l'utiliser.
+ * Une annulation déclenchée par le `signal` de l'appelant est relancée telle quelle.
  */
 export async function fetchFromTmdbProxy(
   request: TmdbProxyRequest,
@@ -96,10 +118,13 @@ export async function fetchFromTmdbProxy(
   if (supabase) {
     const { data } = await supabase.auth.getSession()
     const accessToken = data.session?.access_token
+    // Sécurité : le proxy refuse les appels anonymes, inutile d'envoyer la requête.
     if (!accessToken) throw new TmdbProxyError('unauthorized', null, 'No active session')
     headers['Authorization'] = `Bearer ${accessToken}`
   }
 
+  // On combine l'annulation de l'appelant (ex. l'utilisateur tape une nouvelle
+  // recherche) et notre propre délai maximal : le premier des deux l'emporte.
   const timeout = AbortSignal.timeout(CLIENT_TIMEOUT_MS)
   const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout
 
@@ -107,18 +132,20 @@ export async function fetchFromTmdbProxy(
   try {
     response = await fetch(`/api/tmdb?${toSearchParams(request).toString()}`, { headers, signal })
   } catch (error) {
+    // Annulation volontaire : ce n'est pas une vraie erreur, on la laisse passer.
     if (options.signal?.aborted) throw error
     if (timeout.aborted) throw new TmdbProxyError('timeout', null, 'TMDB proxy timed out')
     throw new TmdbProxyError('network', null, 'Network error while calling TMDB proxy')
   }
 
-  // A static host without the proxy answers with the SPA's HTML (or a 404 page).
+  // Un hébergement statique sans proxy répond avec le HTML de la SPA (ou une page 404).
   if (!isJson(response)) {
     throw new TmdbProxyError('not_configured', response.status, 'TMDB proxy is not available')
   }
 
   if (!response.ok) {
     const code = await readErrorCode(response)
+    // `server_misconfigured` : le serveur n'a pas de clé TMDB, ce n'est pas une panne.
     const kind =
       code === 'server_misconfigured' ? 'not_configured' : kindFromStatus(response.status)
     throw new TmdbProxyError(kind, response.status, `TMDB proxy error ${String(response.status)}`)

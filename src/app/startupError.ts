@@ -1,6 +1,12 @@
 /**
- * Shown when the app cannot start (e.g. invalid configuration), instead of a
- * blank page. Plain DOM on purpose: React may be the part that failed.
+ * Écran de secours affiché quand l'application ne peut pas démarrer
+ * (ex. configuration invalide), au lieu d'une page blanche.
+ */
+
+/**
+ * Remplace le contenu de `container` par un message d'erreur lisible.
+ * Écrit volontairement en DOM « brut », sans React : c'est peut-être React
+ * (ou le chargement de l'application) qui a échoué.
  */
 export function renderStartupError(container: HTMLElement, error: unknown): void {
   const detail = error instanceof Error ? error.message : String(error)
@@ -19,12 +25,14 @@ export function renderStartupError(container: HTMLElement, error: unknown): void
   message.style.cssText = 'margin:0;color:#a3a3b0'
 
   const technical = document.createElement('pre')
+  // `textContent` (et non `innerHTML`) : le message est affiché comme du texte,
+  // aucun HTML qu'il contiendrait ne peut être interprété.
   technical.textContent = detail
   technical.style.cssText =
     'max-width:40rem;white-space:pre-wrap;margin:8px 0 0;padding:12px 16px;border-radius:8px;background:#14141c;color:#f0b54a;font-size:0.85rem;text-align:left'
 
   wrapper.append(title, message)
-  // Configuration details only help the developer: never shown in production builds.
+  // Les détails de configuration n'aident que le développeur : jamais affichés en production.
   if (import.meta.env.DEV) wrapper.append(technical)
 
   container.replaceChildren(wrapper)
