@@ -1,26 +1,31 @@
-export interface ServerConfig {
-  /** Secret. Null when TMDB is not configured yet. */
+/**
+ * Lecture de la configuration du serveur (variables d'environnement Vercel).
+ *
+ * - `TMDB_READ_ACCESS_TOKEN` est SECRET : il ne doit jamais commencer par `VITE_`,
+ *   sinon Vite l'inclurait dans le code envoyé au navigateur.
+ * - `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` sont publiques : le
+ *   serveur les relit pour vérifier les sessions des utilisatrices.
+ */
+interface ServerConfig {
+  /** Token TMDB, ou null s'il n'est pas encore configuré. */
   tmdbReadAccessToken: string | null
-  /** Public values shared with the browser build. Null when Supabase is not configured yet. */
+  /** Accès Supabase, ou null s'il n'est pas encore configuré. */
   supabase: { url: string; publishableKey: string } | null
 }
 
+/** Retourne la valeur nettoyée de ses espaces, ou null si elle est vide. */
 function read(value: string | undefined): string | null {
   const trimmed = value?.trim()
-  if (!trimmed) return null
-  return trimmed
+  return trimmed ? trimmed : null
 }
 
-/**
- * Server-only configuration. `TMDB_READ_ACCESS_TOKEN` is a secret and must
- * never be prefixed with `VITE_`.
- */
 export function readServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const url = read(env.VITE_SUPABASE_URL)
   const publishableKey = read(env.VITE_SUPABASE_PUBLISHABLE_KEY)
 
   return {
     tmdbReadAccessToken: read(env.TMDB_READ_ACCESS_TOKEN),
+    // Supabase n'est considéré comme configuré que si les DEUX valeurs sont présentes.
     supabase: url && publishableKey ? { url, publishableKey } : null,
   }
 }
