@@ -141,6 +141,7 @@ _Authentication → URL Configuration_ :
 - **Confirm email** (activé par défaut) : à la création du compte, Supabase envoie un lien de confirmation qui ramène sur `/login`. Gardez-le activé : il empêche quelqu'un de créer un compte avec votre adresse sans y avoir accès.
 - Seules les adresses de `allowed_emails` peuvent créer un compte (hook _Before User Created_).
 - Le service d'email intégré de Supabase est limité à quelques envois par heure : suffisant pour un usage personnel.
+- **Mot de passe oublié** : le lien reçu par email ramène sur `/login` (déjà autorisé), puis l'application ouvre la page « Nouveau mot de passe ». Le lien doit être ouvert dans le navigateur qui a fait la demande, et il expire au bout d'une heure.
 
 ## Configuration TMDB
 
