@@ -94,15 +94,8 @@
   --uw-accent-fg: #ffffff;
   --uw-success: #15803d;
   --uw-danger: #b91c1c;
-  /* Same photo as night mode, under a light veil: stronger behind the hero text
-     at the top, lighter over the seats, opaque again where long lists scroll. */
-  --uw-backdrop-overlay: linear-gradient(
-    to bottom,
-    rgb(246 245 242 / 0.9) 0%,
-    rgb(246 245 242 / 0.62) 40%,
-    rgb(246 245 242 / 0.7) 70%,
-    rgb(246 245 242 / 0.9) 100%
-  );
+  /* No veil by day: the photo stays as is; content sits on light panels. */
+  --uw-backdrop-overlay: none;
   --uw-backdrop-glow:
     radial-gradient(60rem 30rem at 15% -10%, rgb(240 181 74 / 0.18), transparent 70%),
     radial-gradient(50rem 30rem at 100% 0%, rgb(99 102 241 / 0.08), transparent 70%);
@@ -123,6 +116,16 @@
 
   ::selection {
     background: rgb(240 181 74 / 0.35);
+  }
+}
+
+@layer components {
+  /* Light mode: the photo is shown without a veil, so page content gets its own
+     light surface to stay readable. Night mode keeps content directly on the photo. */
+  [data-theme='light'] .uw-content-panel {
+    background: rgb(246 245 242 / 0.94);
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.35);
   }
 }
 
