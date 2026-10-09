@@ -1,3 +1,10 @@
+/**
+ * Page « Bibliothèque » (/library).
+ *
+ * Vue d'ensemble de tous les titres suivis, filtrables par statut (en cours,
+ * à voir, vus) et par type. Les filtres sont stockés dans l'URL pour pouvoir
+ * partager ou recharger la page sans les perdre.
+ */
 import { Library } from 'lucide-react'
 import { MediaGrid, MediaGridSkeleton } from '@/components/media/MediaGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -10,9 +17,11 @@ import { useLibrary } from '@/features/library/hooks/useLibrary'
 import { countByCategory, filterLibrary } from '@/features/library/selectors'
 import { getUserMessage } from '@/lib/errors'
 
+// Valeurs autorisées pour les filtres lus dans l'URL.
 const STATUSES = ['all', 'in_progress', 'watchlist', 'watched'] as const
 const TYPES = ['all', 'movie', 'tv'] as const
 
+/** Affiche toute la bibliothèque avec filtres de statut et de type, et le nombre de titres par statut. */
 export function LibraryPage() {
   const library = useLibrary()
   const [status, setStatus] = useFilterParam('status', STATUSES, 'all')
@@ -56,6 +65,7 @@ export function LibraryPage() {
           <EmptyState
             icon={Library}
             title="Aucun titre"
+            // On distingue « bibliothèque vide » de « filtres trop restrictifs ».
             description={
               all.length === 0
                 ? 'Votre bibliothèque est vide.'

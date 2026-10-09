@@ -1,3 +1,10 @@
+/**
+ * Panneau de connexion / inscription.
+ *
+ * C'est le cœur de la page /login : deux onglets (« Connexion » et « Créer un
+ * compte »), la validation des champs, l'affichage des erreurs et des
+ * messages de confirmation, et l'accès au formulaire « Mot de passe oublié ».
+ */
 import { Eye, EyeOff, MailCheck } from 'lucide-react'
 import { useId, useState, type SubmitEvent } from 'react'
 import { Button } from '@/components/ui/Button'
@@ -17,15 +24,23 @@ import { ForgotPasswordForm } from './ForgotPasswordForm'
 import { Field, Notice } from './formFields'
 import { inputClass } from './formStyles'
 
+// Onglet actif : connexion ou création de compte.
 type Mode = 'sign-in' | 'sign-up'
 
 interface LoginPanelProps {
+  /** Page où renvoyer l'utilisateur une fois connecté. */
   redirectTo: string
+  /** Erreur éventuelle lue dans l'URL (lien expiré…), affichée dès l'ouverture. */
   initialError: string | null
 }
 
 const EMPTY_VALUES: AuthFormValues = { email: '', password: '', confirmPassword: '' }
 
+/**
+ * Formulaire de connexion et d'inscription par email et mot de passe.
+ * En cas de succès de connexion, rien n'est fait ici : le changement d'état
+ * de session suffit pour que LoginPage redirige l'utilisateur.
+ */
 export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
   const [mode, setMode] = useState<Mode>('sign-in')
   const [values, setValues] = useState<AuthFormValues>(EMPTY_VALUES)
@@ -33,10 +48,14 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
   const [error, setError] = useState<string | null>(initialError)
   const [isPending, setIsPending] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  // Message de succès affiché au-dessus du formulaire (compte créé, ou email
+  // de réinitialisation envoyé).
   const [notice, setNotice] = useState<{ kind: 'sign-up' | 'reset'; email: string } | null>(null)
   const [showForgot, setShowForgot] = useState(false)
   const id = useId()
 
+  // Change d'onglet en effaçant les erreurs et les mots de passe saisis
+  // (l'email est conservé pour ne pas avoir à le retaper).
   function switchMode(next: Mode) {
     setMode(next)
     setFieldErrors({})
@@ -44,6 +63,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
     setValues((current) => ({ ...current, password: '', confirmPassword: '' }))
   }
 
+  // Met à jour un champ et efface son message d'erreur dès que l'utilisateur corrige.
   function update(field: keyof AuthFormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }))
     setFieldErrors((current) => ({ ...current, [field]: undefined }))
@@ -51,6 +71,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
+    // Évite un double envoi si l'utilisateur clique plusieurs fois.
     if (isPending) return
 
     const errors = validateAuthForm(values, mode)
@@ -60,22 +81,27 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
     const credentials = { email: values.email.trim().toLowerCase(), password: values.password }
     setIsPending(true)
     setError(null)
+    // Mémorisé avant l'appel : la redirection aura lieu après le changement de
+    // session, quand ce composant ne sera peut-être plus affiché.
     rememberPostLoginRedirect(redirectTo)
 
     try {
       if (mode === 'sign-in') {
-        // On success the auth state changes and the login page redirects.
+        // En cas de succès, l'état de session change et la page de connexion redirige.
         await signIn(credentials)
-        // Signed in with a password: no pending reset to resume.
+        // Connecté avec un mot de passe : plus de réinitialisation en attente à reprendre.
         clearPasswordResetRequest()
         return
       }
       const result = await signUp(credentials)
+      // Si la confirmation par email est requise, on invite l'utilisateur à
+      // cliquer sur le lien puis à se connecter.
       if (result.status === 'confirmation_required') {
         setNotice({ kind: 'sign-up', email: credentials.email })
         switchMode('sign-in')
       }
     } catch (cause) {
+      // Jamais de message brut du fournisseur : authErrorMessage le traduit.
       if (import.meta.env.DEV) console.error('[auth] request failed', cause)
       setError(authErrorMessage(cause))
     } finally {
@@ -85,6 +111,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
 
   const isSignUp = mode === 'sign-up'
 
+  // Le formulaire « Mot de passe oublié » remplace temporairement tout le panneau.
   if (showForgot) {
     return (
       <ForgotPasswordForm

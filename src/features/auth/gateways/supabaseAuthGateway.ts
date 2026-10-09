@@ -1,3 +1,10 @@
+/**
+ * Passerelle d'authentification réelle, basée sur Supabase Auth.
+ *
+ * Elle traduit le contrat AuthGateway en appels au client Supabase
+ * (connexion par email / mot de passe, inscription, réinitialisation…) et
+ * convertit les erreurs Supabase en AuthFailure compréhensibles par l'app.
+ */
 import { isAuthError, type SupabaseClient, type User } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { AuthFailure, type AuthErrorKind, type AuthGateway, type AuthUser } from '../types'
@@ -7,6 +14,8 @@ function toAuthUser(user: User): AuthUser {
   return { id: user.id, email: user.email ?? null }
 }
 
+// Correspondance entre les codes d'erreur Supabase et nos catégories d'erreur.
+// Plusieurs codes Supabase peuvent mener à la même catégorie.
 const KIND_BY_CODE: Partial<Record<string, AuthErrorKind>> = {
   invalid_credentials: 'invalid_credentials',
   email_not_confirmed: 'email_not_confirmed',
@@ -21,14 +30,20 @@ const KIND_BY_CODE: Partial<Record<string, AuthErrorKind>> = {
   over_email_send_rate_limit: 'rate_limited',
 }
 
-/** Maps Supabase Auth errors to kinds; raw server messages never reach the UI. */
+/**
+ * Convertit les erreurs Supabase Auth en catégories ; les messages bruts du
+ * serveur n'atteignent jamais l'interface.
+ */
 export function toAuthFailure(error: unknown): AuthFailure {
+  // Ce n'est pas une erreur Supabase : sans doute un problème réseau.
   if (!isAuthError(error)) return new AuthFailure('network', 'Auth request failed')
 
+  // 1. On s'appuie d'abord sur le code d'erreur précis, quand il existe.
   const byCode = error.code ? KIND_BY_CODE[error.code] : undefined
   if (byCode) return new AuthFailure(byCode, error.message)
 
-  // The "Before User Created" hook (sign-up allowlist) answers with HTTP 403.
+  // 2. Sinon, on se rabat sur le statut HTTP.
+  // Le hook « Before User Created » (liste blanche d'inscription) répond en HTTP 403.
   if (error.status === 403) return new AuthFailure('not_allowed', error.message)
   if (error.status === 429) return new AuthFailure('rate_limited', error.message)
   if (error.status === 0 || error.name === 'AuthRetryableFetchError') {
@@ -37,11 +52,12 @@ export function toAuthFailure(error: unknown): AuthFailure {
   return new AuthFailure('unknown', error.message)
 }
 
+/** Crée la passerelle d'authentification qui s'appuie sur le client Supabase donné. */
 export function createSupabaseAuthGateway(client: SupabaseClient<Database>): AuthGateway {
   return {
     onChange(listener) {
-      // Synchronous callback on purpose: async callbacks are deprecated by
-      // supabase-js because they can deadlock during token refresh.
+      // Callback synchrone volontairement : supabase-js déconseille les callbacks
+      // async car ils peuvent provoquer un blocage pendant le rafraîchissement du jeton.
       const { data } = client.auth.onAuthStateChange((_event, session) => {
         listener(session ? toAuthUser(session.user) : null)
       })
@@ -59,16 +75,17 @@ export function createSupabaseAuthGateway(client: SupabaseClient<Database>): Aut
       const { data, error } = await client.auth.signUp({
         email,
         password,
-        // The confirmation link brings the user back to the login page.
+        // Le lien de confirmation ramène l'utilisateur sur la page de connexion.
         options: { emailRedirectTo: `${window.location.origin}/login` },
       })
       if (error) throw toAuthFailure(error)
+      // Sans session, Supabase attend que l'utilisateur confirme son email.
       return data.session ? { status: 'signed_in' } : { status: 'confirmation_required' }
     },
 
     async requestPasswordReset(email) {
-      // The link returns to /login (already an allowed redirect URL); the app then
-      // opens the "new password" page (see passwordRecovery.ts).
+      // Le lien revient sur /login (déjà autorisée comme URL de redirection) ;
+      // l'app ouvre ensuite la page « nouveau mot de passe » (voir passwordRecovery.ts).
       const { error } = await client.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/login`,
       })
@@ -81,7 +98,7 @@ export function createSupabaseAuthGateway(client: SupabaseClient<Database>): Aut
     },
 
     async signOut() {
-      // Current device only (Supabase defaults to every device).
+      // Appareil actuel uniquement (par défaut, Supabase déconnecte tous les appareils).
       const { error } = await client.auth.signOut({ scope: 'local' })
       if (error) throw toAuthFailure(error)
     },

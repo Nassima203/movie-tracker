@@ -1,3 +1,11 @@
+/**
+ * Page de connexion (/login).
+ *
+ * Selon l'état de session : affiche un chargement, redirige l'utilisateur
+ * déjà connecté, ou présente le panneau de connexion / inscription. C'est
+ * aussi la page de retour des liens envoyés par email (confirmation de
+ * compte, réinitialisation du mot de passe).
+ */
 import { useLocation } from 'react-router'
 import { AppBackdrop } from '@/components/layout/AppBackdrop'
 import { FullPageLoader } from '@/components/ui/FullPageLoader'
@@ -8,6 +16,10 @@ import { getAuthRedirectErrorMessage } from '@/features/auth/authRedirectError'
 import { toSafeRedirectPath } from '@/features/auth/redirect'
 import { isDemoMode } from '@/lib/env'
 
+// Récupère la page d'origine transmise par ProtectedRoute dans l'état de
+// navigation. Cet état est vérifié avec soin car il n'est pas typé (unknown)
+// et le chemin passe par toSafeRedirectPath pour éviter toute redirection
+// vers un site externe.
 function readFromState(state: unknown): string {
   if (typeof state === 'object' && state !== null && 'from' in state) {
     return toSafeRedirectPath(state.from)
@@ -15,6 +27,7 @@ function readFromState(state: unknown): string {
   return '/'
 }
 
+/** Page de connexion : chargement, redirection après connexion, ou formulaire. */
 export function LoginPage() {
   const auth = useAuth()
   const location = useLocation()
@@ -23,6 +36,7 @@ export function LoginPage() {
     return <FullPageLoader label="Chargement de la session…" />
   }
 
+  // Déjà connecté (ou vient de se connecter) : on part vers la bonne page.
   if (auth.status === 'authenticated') {
     return <PostLoginRedirect />
   }

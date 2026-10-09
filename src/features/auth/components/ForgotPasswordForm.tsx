@@ -1,3 +1,10 @@
+/**
+ * Formulaire « Mot de passe oublié ».
+ *
+ * Affiché à la place du formulaire de connexion quand l'utilisateur clique sur
+ * « Mot de passe oublié ? ». Il envoie la demande de lien de réinitialisation
+ * puis mémorise cette demande pour que l'app ouvre la bonne page au retour.
+ */
 import { ArrowLeft } from 'lucide-react'
 import { useId, useState, type SubmitEvent } from 'react'
 import { Button } from '@/components/ui/Button'
@@ -9,12 +16,21 @@ import { validateEmail } from '../validation'
 import { Field } from './formFields'
 import { inputClass } from './formStyles'
 
+// Propriétés reçues du panneau de connexion parent.
 interface ForgotPasswordFormProps {
+  /** Email déjà saisi dans le formulaire de connexion, pour éviter de le retaper. */
   initialEmail: string
+  /** Revenir au formulaire de connexion. */
   onBack: () => void
+  /** Appelé quand la demande est envoyée, avec l'email normalisé. */
   onSent: (email: string) => void
 }
 
+/**
+ * Demande un email de réinitialisation du mot de passe.
+ * Par sécurité, la réponse est la même que le compte existe ou non (voir le
+ * message affiché par LoginPanel), pour ne pas révéler les adresses inscrites.
+ */
 export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState(initialEmail)
   const [fieldError, setFieldError] = useState<string | undefined>()
@@ -24,20 +40,25 @@ export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPassw
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
+    // Évite un double envoi si l'utilisateur clique plusieurs fois.
     if (isPending) return
 
     const emailError = validateEmail(email)
     setFieldError(emailError)
     if (emailError) return
 
+    // Même normalisation que pour la connexion : espaces retirés, minuscules.
     const normalized = email.trim().toLowerCase()
     setIsPending(true)
     setError(null)
     try {
       await requestPasswordReset(normalized)
+      // Retient la demande : au retour via le lien, l'app ouvrira la page
+      // « nouveau mot de passe » (voir PostLoginRedirect).
       markPasswordResetRequested()
       onSent(normalized)
     } catch (cause) {
+      // Détail technique en développement seulement ; l'utilisateur voit un message clair.
       if (import.meta.env.DEV) console.error('[auth] reset request failed', cause)
       setError(authErrorMessage(cause))
     } finally {

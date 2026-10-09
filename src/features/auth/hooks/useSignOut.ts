@@ -5,6 +5,10 @@
 import { useState } from 'react'
 import { signOut } from '../authService'
 
+/**
+ * Fournit la fonction `signOut` à brancher sur un bouton, et `isPending` pour
+ * indiquer qu'une déconnexion est en cours.
+ */
 export function useSignOut() {
   // Vrai pendant la déconnexion : sert à désactiver le bouton et afficher un spinner.
   const [isPending, setIsPending] = useState(false)

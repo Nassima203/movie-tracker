@@ -1,5 +1,15 @@
+/**
+ * Messages d'erreur d'authentification affichés à l'utilisateur.
+ *
+ * Chaque type d'erreur connu (AuthErrorKind) correspond à une phrase claire
+ * en français. Les messages bruts renvoyés par le serveur ne sont jamais
+ * affichés : ils peuvent être techniques, en anglais, ou révéler des détails
+ * internes.
+ */
 import { AuthFailure, type AuthErrorKind } from './types'
 
+// Table de correspondance « type d'erreur → message lisible ». Le typage
+// Record<AuthErrorKind, string> oblige à prévoir un message pour chaque type.
 const MESSAGES: Record<AuthErrorKind, string> = {
   invalid_credentials: 'Email ou mot de passe incorrect.',
   email_not_confirmed:
@@ -15,6 +25,11 @@ const MESSAGES: Record<AuthErrorKind, string> = {
   unknown: 'La connexion a échoué. Veuillez réessayer.',
 }
 
+/**
+ * Transforme n'importe quelle erreur en message affichable.
+ * Seules les AuthFailure ont un message dédié ; toute autre erreur
+ * (inattendue) reçoit le message générique, pour ne rien divulguer.
+ */
 export function authErrorMessage(error: unknown): string {
   return error instanceof AuthFailure ? MESSAGES[error.kind] : MESSAGES.unknown
 }

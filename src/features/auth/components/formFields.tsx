@@ -1,5 +1,14 @@
+/**
+ * Petits composants de mise en page partagés par les formulaires
+ * d'authentification (connexion, mot de passe oublié, nouveau mot de passe).
+ */
 import type { ReactNode } from 'react'
 
+/**
+ * Champ de formulaire : libellé, contrôle de saisie (passé en `children`) et
+ * message d'erreur. L'erreur reçoit l'id `${id}-error`, que l'input référence
+ * via aria-describedby pour que les lecteurs d'écran l'annoncent.
+ */
 export function Field({
   id,
   label,
@@ -26,6 +35,7 @@ export function Field({
   )
 }
 
+/** Encadré de message de succès, annoncé poliment aux lecteurs d'écran (role="status"). */
 export function Notice({ children }: { children: ReactNode }) {
   return (
     <div

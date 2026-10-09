@@ -1,3 +1,9 @@
+/**
+ * Page de détail d'un film (/movie/:id).
+ *
+ * Lit l'identifiant TMDB dans l'URL, charge les informations du film et
+ * affiche l'en-tête de détail avec les actions de bibliothèque (à voir, vu…).
+ */
 import { useParams } from 'react-router'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { useMovieDetails } from '@/features/catalog/hooks/useMediaDetails'
@@ -10,11 +16,13 @@ import { formatRuntime } from '@/lib/format'
 import { parseTmdbIdParam } from './params'
 import { NotFoundPage } from './NotFoundPage'
 
+/** Valide l'id de l'URL : page introuvable s'il est invalide, sinon le détail du film. */
 export function MovieDetailPage() {
   const tmdbId = parseTmdbIdParam(useParams()['id'])
   return tmdbId === null ? <NotFoundPage /> : <MovieDetail tmdbId={tmdbId} />
 }
 
+// Contenu de la page, séparé pour n'appeler les hooks de données qu'avec un id valide.
 function MovieDetail({ tmdbId }: { tmdbId: number }) {
   const movie = useMovieDetails(tmdbId)
   const item = useLibraryItem({ mediaType: 'movie', tmdbId })

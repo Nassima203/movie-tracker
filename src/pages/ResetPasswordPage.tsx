@@ -1,3 +1,10 @@
+/**
+ * Page « Nouveau mot de passe » (/reset-password).
+ *
+ * Dernière étape de la réinitialisation : l'utilisateur a demandé un lien,
+ * l'a ouvert depuis son email (ce qui l'a connecté), puis a été redirigé ici
+ * pour choisir son nouveau mot de passe.
+ */
 import { Eye, EyeOff } from 'lucide-react'
 import { useId, useState, type SubmitEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
@@ -15,12 +22,13 @@ import { clearPasswordResetRequest } from '@/features/auth/passwordRecovery'
 import { hasErrors, validateNewPassword } from '@/features/auth/validation'
 
 /**
- * Reached after following the reset link from the email: the link signs the
- * user in, then they choose a new password here.
+ * Atteinte après avoir suivi le lien de réinitialisation reçu par email : le
+ * lien connecte l'utilisateur, qui choisit ensuite ici son nouveau mot de passe.
  */
 export function ResetPasswordPage() {
   const auth = useAuth()
 
+  // Le lien est en cours d'échange contre une session : on patiente.
   if (auth.status === 'loading') return <FullPageLoader label="Vérification du lien…" />
 
   return (
@@ -30,12 +38,14 @@ export function ResetPasswordPage() {
         <h1 className="text-center text-4xl font-bold tracking-tight">
           u<span className="text-accent">watch</span>
         </h1>
+        {/* Pas de session : le lien a expiré ou a été ouvert dans un autre navigateur. */}
         {auth.status === 'authenticated' ? <NewPasswordForm /> : <ExpiredLink />}
       </div>
     </main>
   )
 }
 
+// Message affiché quand le lien n'a pas pu connecter l'utilisateur.
 function ExpiredLink() {
   return (
     <div role="alert" className="flex flex-col gap-4 text-center">
@@ -54,6 +64,7 @@ function ExpiredLink() {
   )
 }
 
+// Formulaire de saisie (et confirmation) du nouveau mot de passe.
 function NewPasswordForm() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -70,6 +81,7 @@ function NewPasswordForm() {
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
+    // Évite un double envoi si l'utilisateur clique plusieurs fois.
     if (isPending) return
 
     const errors = validateNewPassword(password, confirmPassword)
@@ -80,10 +92,13 @@ function NewPasswordForm() {
     setError(null)
     try {
       await updatePassword(password)
+      // La réinitialisation est terminée : on oublie la demande en attente.
       clearPasswordResetRequest()
       notify('Mot de passe modifié.', 'success')
+      // `replace` empêche de revenir sur ce formulaire avec le bouton « Précédent ».
       void navigate('/', { replace: true })
     } catch (cause) {
+      // Message traduit pour l'utilisateur ; le détail brut reste dans la console (dev).
       if (import.meta.env.DEV) console.error('[auth] password update failed', cause)
       setError(authErrorMessage(cause))
     } finally {

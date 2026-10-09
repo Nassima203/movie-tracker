@@ -1,3 +1,10 @@
+/**
+ * Page d'accueil (« / »).
+ *
+ * Affiche le slogan, la barre de recherche, un résumé de la bibliothèque,
+ * puis plusieurs sections : titres en cours, à voir, tendances de la semaine
+ * (venant de TMDB) et titres vus récemment.
+ */
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router'
 import { MediaGrid, MediaGridSkeleton } from '@/components/media/MediaGrid'
@@ -9,8 +16,11 @@ import { SearchCombobox } from '@/features/search/components/SearchCombobox'
 import { getUserMessage } from '@/lib/errors'
 import type { LibraryItem } from '@/types/media'
 
+// Nombre maximum de titres affichés par section de la bibliothèque.
 const SECTION_SIZE = 6
 
+// Section d'un extrait de la bibliothèque, avec un lien « Tout voir ».
+// Rien n'est affiché si la section est vide.
 function LibrarySection({ title, to, items }: { title: string; to: string; items: LibraryItem[] }) {
   if (items.length === 0) return null
   return (
@@ -37,6 +47,8 @@ function SectionHeading({ title, to }: { title: string; to?: string }) {
   )
 }
 
+// Tendances TMDB ; `library` permet d'indiquer sur chaque carte si le titre
+// est déjà suivi par l'utilisateur.
 function TrendingSection({ library }: { library: Map<string, LibraryItem> }) {
   const trending = useTrending()
 
@@ -55,8 +67,10 @@ function TrendingSection({ library }: { library: Map<string, LibraryItem> }) {
   )
 }
 
+/** Page d'accueil : recherche, résumé et aperçus de la bibliothèque, tendances. */
 export function HomePage() {
   const library = useLibrary()
+  // Tant que la bibliothèque n'est pas chargée, on travaille sur une liste vide.
   const items = library.data ?? []
   const inProgress = filterLibrary(items, 'in_progress', 'all')
   const watchlist = filterLibrary(items, 'watchlist', 'all')

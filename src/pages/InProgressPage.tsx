@@ -1,3 +1,9 @@
+/**
+ * Page « En cours » (/in-progress).
+ *
+ * Liste les films et séries que l'utilisateur est en train de regarder, avec
+ * un filtre par type (tout / films / séries) conservé dans l'URL.
+ */
 import { Play } from 'lucide-react'
 import { MediaGrid, MediaGridSkeleton } from '@/components/media/MediaGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -9,8 +15,10 @@ import { useLibrary } from '@/features/library/hooks/useLibrary'
 import { filterLibrary } from '@/features/library/selectors'
 import { getUserMessage } from '@/lib/errors'
 
+// Valeurs autorisées pour le filtre de type (toute autre valeur d'URL est ignorée).
 const TYPES = ['all', 'movie', 'tv'] as const
 
+/** Affiche les titres « en cours » de la bibliothèque, filtrables par type. */
 export function InProgressPage() {
   const library = useLibrary()
   const [type, setType] = useFilterParam('type', TYPES, 'all')
