@@ -355,4 +355,4 @@ Ce que vérifient les tests :
 
 ## Données
 
-Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.
+
