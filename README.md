@@ -37,12 +37,12 @@ Site en production : <https://movie-tracker-theta-seven.vercel.app>
 | **Pages**       | Accueil, À voir, En cours, Bibliothèque (filtres par statut et par type), fiche film, fiche série. |
 | **Apparence**   | Mode nuit (par défaut) et mode jour mémorisés, photo de salle de cinéma en fond, adapté au mobile. |
 
-### Le parcours d'une utilisatrice
+### Le parcours d'un utilisateur
 
-1. Elle arrive sur `/login`, crée son compte, clique sur le lien reçu par email, puis se connecte.
-2. Elle tape un titre dans la barre de recherche : les résultats TMDB s'affichent au fur et à mesure.
-3. Elle clique sur **À voir**, **En cours** ou **Vu** : le titre est enregistré dans sa bibliothèque.
-4. Pour une série, elle ouvre la fiche et coche les saisons vues : la progression se met à jour.
+1. Il arrive sur `/login`, crée son compte, clique sur le lien reçu par email, puis se connecte.
+2. Il tape un titre dans la barre de recherche : les résultats TMDB s'affichent au fur et à mesure.
+3. Il clique sur **À voir**, **En cours** ou **Vu** : le titre est enregistré dans sa bibliothèque.
+4. Pour une série, il ouvre la fiche et coche les saisons vues : la progression se met à jour.
    Quand toutes les saisons diffusées sont cochées, la série passe automatiquement en « Vu ».
 
 ### Comment un titre est classé
