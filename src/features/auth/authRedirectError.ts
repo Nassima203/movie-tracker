@@ -4,7 +4,9 @@
  * (query string for PKCE, fragment for the implicit flow) and maps it to a
  * user-facing message. Raw provider messages are never shown to the user.
  */
-export function getOAuthErrorMessage(location: Pick<Location, 'search' | 'hash'>): string | null {
+export function getAuthRedirectErrorMessage(
+  location: Pick<Location, 'search' | 'hash'>,
+): string | null {
   const query = new URLSearchParams(location.search)
   const fragment = new URLSearchParams(location.hash.replace(/^#/, ''))
 

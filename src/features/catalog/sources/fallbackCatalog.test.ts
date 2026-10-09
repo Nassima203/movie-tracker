@@ -29,7 +29,6 @@ describe('createFallbackCatalog', () => {
     )
 
     expect(await catalog.trending()).toEqual([film])
-    expect(catalog.origin()).toBe('tmdb')
   })
 
   it('switches to the built-in catalog for good when TMDB is not configured', async () => {
@@ -44,7 +43,6 @@ describe('createFallbackCatalog', () => {
     expect(await catalog.trending()).toEqual([film])
     expect(await catalog.trending()).toEqual([film])
     expect(primaryTrending).toHaveBeenCalledTimes(1)
-    expect(catalog.origin()).toBe('demo')
   })
 
   it('keeps reporting real TMDB failures', async () => {
@@ -54,6 +52,5 @@ describe('createFallbackCatalog', () => {
     )
 
     await expect(catalog.trending()).rejects.toMatchObject({ kind: 'timeout' })
-    expect(catalog.origin()).toBe('tmdb')
   })
 })

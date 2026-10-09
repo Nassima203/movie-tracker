@@ -6,8 +6,6 @@ import type { AuthState, AuthUser } from '@/features/auth/types'
 export const fakeUser: AuthUser = {
   id: 'user-1',
   email: 'me@example.com',
-  displayName: 'Me',
-  avatarUrl: null,
 }
 
 export function renderRoutesWithAuth(

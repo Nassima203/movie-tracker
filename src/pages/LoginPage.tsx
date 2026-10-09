@@ -4,7 +4,7 @@ import { FullPageLoader } from '@/components/ui/FullPageLoader'
 import { LoginPanel } from '@/features/auth/components/LoginPanel'
 import { PostLoginRedirect } from '@/features/auth/components/PostLoginRedirect'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { getOAuthErrorMessage } from '@/features/auth/oauthError'
+import { getAuthRedirectErrorMessage } from '@/features/auth/authRedirectError'
 import { toSafeRedirectPath } from '@/features/auth/redirect'
 import { isDemoMode } from '@/lib/env'
 
@@ -45,7 +45,7 @@ export function LoginPage() {
 
         <LoginPanel
           redirectTo={readFromState(location.state)}
-          initialError={getOAuthErrorMessage(location)}
+          initialError={getAuthRedirectErrorMessage(location)}
         />
 
         {isDemoMode && (
@@ -55,10 +55,6 @@ export function LoginPage() {
             navigateur.
           </p>
         )}
-
-        <p className="text-center text-xs text-fg-muted">
-          Ce produit utilise l’API TMDB mais n’est ni approuvé ni certifié par TMDB.
-        </p>
       </div>
     </main>
   )

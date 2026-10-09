@@ -1,8 +1,6 @@
 import { TmdbProxyError } from '@/lib/tmdb'
 import type { CatalogSource } from './types'
 
-export type CatalogOrigin = 'tmdb' | 'demo'
-
 /**
  * Demo mode only: uses TMDB through the proxy when it is available (local dev
  * with a TMDB token) and switches to the built-in catalog for good as soon as
@@ -11,7 +9,7 @@ export type CatalogOrigin = 'tmdb' | 'demo'
 export function createFallbackCatalog(
   primary: CatalogSource,
   fallback: CatalogSource,
-): CatalogSource & { origin: () => CatalogOrigin } {
+): CatalogSource {
   let useFallback = false
 
   async function run<T>(call: (source: CatalogSource) => Promise<T>): Promise<T> {
@@ -32,7 +30,6 @@ export function createFallbackCatalog(
   }
 
   return {
-    origin: () => (useFallback ? 'demo' : 'tmdb'),
     search: (query, signal) => run((source) => source.search(query, signal)),
     trending: (signal) => run((source) => source.trending(signal)),
     getMovie: (tmdbId, signal) => run((source) => source.getMovie(tmdbId, signal)),

@@ -16,7 +16,8 @@ interface ServerConfig {
 /** Retourne la valeur nettoyée de ses espaces, ou null si elle est vide. */
 function read(value: string | undefined): string | null {
   const trimmed = value?.trim()
-  return trimmed ? trimmed : null
+  if (!trimmed) return null
+  return trimmed
 }
 
 export function readServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {

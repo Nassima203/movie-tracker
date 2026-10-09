@@ -2,22 +2,9 @@ import { isAuthError, type SupabaseClient, type User } from '@supabase/supabase-
 import type { Database } from '@/types/database'
 import { AuthFailure, type AuthErrorKind, type AuthGateway, type AuthUser } from '../types'
 
-function readMetadataString(metadata: Record<string, unknown>, key: string): string | null {
-  const value = metadata[key]
-  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null
-}
-
-/** User metadata is user-controlled: only keep plain strings and https avatars. */
-export function toAuthUser(user: User): AuthUser {
-  const metadata: Record<string, unknown> = user.user_metadata
-  const avatar = readMetadataString(metadata, 'avatar_url')
-
-  return {
-    id: user.id,
-    email: user.email ?? null,
-    displayName: readMetadataString(metadata, 'full_name') ?? readMetadataString(metadata, 'name'),
-    avatarUrl: avatar?.startsWith('https://') ? avatar : null,
-  }
+/** Ne garde de l'utilisateur Supabase que ce dont l'application a besoin. */
+function toAuthUser(user: User): AuthUser {
+  return { id: user.id, email: user.email ?? null }
 }
 
 const KIND_BY_CODE: Partial<Record<string, AuthErrorKind>> = {

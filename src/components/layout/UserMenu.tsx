@@ -1,3 +1,7 @@
+/**
+ * Menu utilisateur dans l'en-tête : une pastille avec l'initiale de l'email
+ * et un bouton de déconnexion.
+ */
 import { LogOut } from 'lucide-react'
 import { Spinner } from '@/components/ui/Spinner'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -6,26 +10,19 @@ import { useSignOut } from '@/features/auth/hooks/useSignOut'
 export function UserMenu() {
   const auth = useAuth()
   const { signOut, isPending } = useSignOut()
-  const user = auth.status === 'authenticated' ? auth.user : null
-  const initial = (user?.displayName ?? user?.email ?? '?').charAt(0).toUpperCase()
+  const email = auth.status === 'authenticated' ? auth.user.email : null
+  // Première lettre de l'email (« ? » en mode démo, où il n'y a pas d'email).
+  const initial = (email ?? '?').charAt(0).toUpperCase()
 
   return (
     <div className="flex items-center gap-1">
-      {user?.avatarUrl ? (
-        <img
-          src={user.avatarUrl}
-          alt=""
-          referrerPolicy="no-referrer"
-          className="size-8 rounded-full ring-1 ring-border"
-        />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="inline-flex size-8 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent"
-        >
-          {initial}
-        </span>
-      )}
+      <span
+        aria-hidden="true"
+        title={email ?? undefined}
+        className="inline-flex size-8 items-center justify-center rounded-full bg-accent/15 text-sm font-semibold text-accent"
+      >
+        {initial}
+      </span>
       <button
         type="button"
         onClick={() => void signOut()}

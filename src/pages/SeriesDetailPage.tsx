@@ -20,7 +20,7 @@ export function SeriesDetailPage() {
 
 function SeriesDetail({ tmdbId }: { tmdbId: number }) {
   const series = useSeriesDetails(tmdbId)
-  const { item } = useLibraryItem({ mediaType: 'tv', tmdbId })
+  const item = useLibraryItem({ mediaType: 'tv', tmdbId })
   useSyncSeasonCount(series.data, item)
 
   if (series.isPending) return <DetailSkeleton />

@@ -31,10 +31,10 @@ export function indexLibrary(items: LibraryItem[] | undefined): Map<string, Libr
   return new Map((items ?? []).map((item) => [mediaKey(item), item]))
 }
 
-export function useLibraryItem(ref: MediaRef): { item: LibraryItem | null; isLoading: boolean } {
-  const query = useLibrary()
-  const item =
-    query.data?.find((entry) => entry.mediaType === ref.mediaType && entry.tmdbId === ref.tmdbId) ??
-    null
-  return { item, isLoading: query.isPending }
+/** L'entrée de la bibliothèque pour un titre donné, ou null s'il n'y est pas. */
+export function useLibraryItem(ref: MediaRef): LibraryItem | null {
+  const { data } = useLibrary()
+  return (
+    data?.find((entry) => entry.mediaType === ref.mediaType && entry.tmdbId === ref.tmdbId) ?? null
+  )
 }

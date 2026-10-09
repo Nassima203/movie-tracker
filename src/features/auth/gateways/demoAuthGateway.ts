@@ -5,8 +5,6 @@ const STORAGE_KEY = 'uwatch:demo-signed-in'
 export const DEMO_USER: AuthUser = {
   id: 'demo-user',
   email: null,
-  displayName: 'Démo',
-  avatarUrl: null,
 }
 
 function readSignedIn(): boolean {

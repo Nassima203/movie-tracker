@@ -17,7 +17,7 @@ export function MovieDetailPage() {
 
 function MovieDetail({ tmdbId }: { tmdbId: number }) {
   const movie = useMovieDetails(tmdbId)
-  const { item } = useLibraryItem({ mediaType: 'movie', tmdbId })
+  const item = useLibraryItem({ mediaType: 'movie', tmdbId })
 
   if (movie.isPending) return <DetailSkeleton />
   if (movie.isError) {
