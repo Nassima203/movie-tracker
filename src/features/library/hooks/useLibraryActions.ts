@@ -2,7 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/toast/useToast'
 import { catalog, catalogKeys, DETAILS_STALE_TIME } from '@/features/catalog/catalog'
 import { getUserMessage, logDevError } from '@/lib/errors'
-import type { LibraryItem, MediaRef, MediaSummary, SeriesDetails } from '@/types/media'
+import type {
+  LibraryItem,
+  LibraryStatus,
+  MediaRef,
+  MediaSummary,
+  SeriesDetails,
+} from '@/types/media'
 import { airedRegularSeasons } from '../progress'
 import { libraryRepository } from '../repository'
 import { libraryQueryKey, useLibraryUserId } from './useLibrary'
@@ -76,6 +82,17 @@ function useOptimisticLibraryMutation<TVariables>(options: {
   })
 }
 
+/** Series status after a season change: all aired seen → watched, some → watching. */
+function seasonStatus(
+  completed: boolean,
+  watchedSeasons: Set<number>,
+  current: LibraryItem | null,
+): LibraryStatus {
+  if (completed) return 'watched'
+  if ([...watchedSeasons].some((season) => season > 0)) return 'watching'
+  return current?.status === 'watching' ? 'watching' : 'watchlist'
+}
+
 export function useAddToWatchlist() {
   return useOptimisticLibraryMutation({
     mutationFn: (media: MediaSummary) =>
@@ -83,6 +100,16 @@ export function useAddToWatchlist() {
     optimistic: (media) => (items) =>
       upsertLocal(items, { ...toSummary(media), status: 'watchlist', watchedAt: null }),
     errorMessage: 'Impossible d’ajouter ce titre à votre liste.',
+  })
+}
+
+export function useMarkWatching() {
+  return useOptimisticLibraryMutation({
+    mutationFn: (media: MediaSummary) =>
+      libraryRepository.upsert({ ...toSummary(media), status: 'watching' }),
+    optimistic: (media) => (items) =>
+      upsertLocal(items, { ...toSummary(media), status: 'watching', watchedAt: null }),
+    errorMessage: 'Impossible de marquer ce titre comme en cours.',
   })
 }
 
@@ -153,7 +180,7 @@ export function useSetSeasonsWatched() {
         else nextWatched.delete(season)
       }
       const completed = aired.length > 0 && aired.every((season) => nextWatched.has(season))
-      const status = completed ? 'watched' : 'watchlist'
+      const status = seasonStatus(completed, nextWatched, current)
 
       if (current?.status !== status || current.seasonCount !== aired.length) {
         await libraryRepository.upsert({ ...toSummary(series), status, seasonCount: aired.length })
@@ -173,7 +200,7 @@ export function useSetSeasonsWatched() {
         return upsertLocal(items, {
           ...toSummary(series),
           seasonCount: aired.length,
-          status: completed ? 'watched' : 'watchlist',
+          status: seasonStatus(completed, seasons, current),
           watchedAt: completed ? new Date().toISOString() : null,
           watchedSeasons: [...seasons].sort((a, b) => a - b),
         })

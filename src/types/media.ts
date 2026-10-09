@@ -41,7 +41,7 @@ export interface SeriesDetails extends MediaSummary {
 
 export type MediaDetails = MovieDetails | SeriesDetails
 
-export type LibraryStatus = 'watchlist' | 'watched'
+export type LibraryStatus = 'watchlist' | 'watching' | 'watched'
 
 export interface LibraryItem extends MediaSummary {
   status: LibraryStatus

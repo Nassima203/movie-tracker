@@ -91,11 +91,7 @@ export function HomePage() {
       )}
 
       <div className="flex flex-col gap-12">
-        <LibrarySection
-          title="Séries en cours"
-          to="/library?status=in_progress"
-          items={inProgress}
-        />
+        <LibrarySection title="En cours" to="/in-progress" items={inProgress} />
         <LibrarySection title="À voir" to="/watchlist" items={watchlist} />
         <TrendingSection library={indexLibrary(library.data)} />
         <LibrarySection title="Vus récemment" to="/library?status=watched" items={watched} />

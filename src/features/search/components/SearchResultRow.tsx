@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 import { formatYear, mediaTypeLabel } from '@/lib/format'
 import type { LibraryItem, MediaSummary } from '@/types/media'
 
-export const SEARCH_COLUMNS = 3
+export const SEARCH_COLUMNS = 4
 
 interface SearchResultRowProps {
   media: MediaSummary
@@ -20,7 +20,7 @@ interface SearchResultRowProps {
 }
 
 /**
- * One grid row of the search popup: [open] [À voir] [Vu].
+ * One grid row of the search popup: [open] [À voir] [En cours] [Vu].
  * Focus stays in the input (aria-activedescendant); cells are activated by
  * Enter or by pointer, so action buttons are removed from the tab order.
  */
@@ -94,6 +94,7 @@ export function SearchResultRow({
           kind="watchlist"
           size="sm"
           iconOnlyOnMobile
+          iconOnly={size === 'compact'}
           tabIndex={-1}
           state={actions.watchlist.state}
           label={actions.watchlist.label}
@@ -112,9 +113,31 @@ export function SearchResultRow({
         }}
       >
         <ActionButton
+          kind="watching"
+          size="sm"
+          iconOnlyOnMobile
+          iconOnly={size === 'compact'}
+          tabIndex={-1}
+          state={actions.watching.state}
+          label={actions.watching.label}
+          onRun={actions.watching.run}
+          aria-label={`${actions.watching.label} : ${media.title}`}
+        />
+      </div>
+      <div
+        id={cellId(rowIndex, 3)}
+        role="gridcell"
+        aria-selected={activeColumn === 3}
+        className={cellClass(3)}
+        onMouseEnter={() => {
+          onHover(rowIndex, 3)
+        }}
+      >
+        <ActionButton
           kind="watched"
           size="sm"
           iconOnlyOnMobile
+          iconOnly={size === 'compact'}
           tabIndex={-1}
           state={actions.watched.state}
           label={actions.watched.label}

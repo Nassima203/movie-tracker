@@ -40,10 +40,13 @@ export function computeSeriesProgress(
 export type LibraryCategory = 'watchlist' | 'in_progress' | 'watched'
 
 export function categorize(item: LibraryItem): LibraryCategory {
-  if (item.mediaType === 'movie') return item.status
+  if (item.mediaType === 'movie') {
+    return item.status === 'watching' ? 'in_progress' : item.status
+  }
 
+  // Series: the seasons decide first, then the status chosen by the user.
   const progress = computeSeriesProgress(item)
   if (progress.state === 'completed') return 'watched'
-  if (progress.state === 'in_progress') return 'in_progress'
+  if (progress.state === 'in_progress' || item.status === 'watching') return 'in_progress'
   return item.status === 'watched' ? 'watched' : 'watchlist'
 }

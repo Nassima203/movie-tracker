@@ -21,6 +21,12 @@ export function MediaActionsBar({
         onRun={actions.watchlist.run}
       />
       <ActionButton
+        kind="watching"
+        state={actions.watching.state}
+        label={actions.watching.label}
+        onRun={actions.watching.run}
+      />
+      <ActionButton
         kind="watched"
         state={actions.watched.state}
         label={

@@ -59,7 +59,7 @@ describe('SeasonList', () => {
       expect(repository.setSeasonsWatched).toHaveBeenCalledWith(87108, [1], true)
     })
     expect(repository.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ tmdbId: 87108, status: 'watchlist', seasonCount: 2 }),
+      expect.objectContaining({ tmdbId: 87108, status: 'watching', seasonCount: 2 }),
     )
     const upsertOrder = repository.upsert.mock.invocationCallOrder[0] ?? 0
     const seasonOrder = repository.setSeasonsWatched.mock.invocationCallOrder[0] ?? 0

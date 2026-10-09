@@ -1,17 +1,19 @@
-import { Check, Plus } from 'lucide-react'
+import { Check, Play, Plus } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 import { Spinner } from '@/components/ui/Spinner'
 import { cn } from '@/lib/cn'
 import type { ActionState } from '../hooks/useMediaActions'
 
 interface ActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
-  kind: 'watchlist' | 'watched'
+  kind: 'watchlist' | 'watching' | 'watched'
   state: ActionState
   label: string
   onRun: () => void
   size?: 'sm' | 'md'
   /** Narrow screens: icon only (the label stays available to screen readers). */
   iconOnlyOnMobile?: boolean
+  /** Always icon only (compact lists); the label becomes a tooltip. */
+  iconOnly?: boolean
 }
 
 export function ActionButton({
@@ -21,11 +23,12 @@ export function ActionButton({
   onRun,
   size = 'md',
   iconOnlyOnMobile = false,
+  iconOnly = false,
   className,
   ...props
 }: ActionButtonProps) {
   const done = state === 'done'
-  const Icon = kind === 'watchlist' ? Plus : Check
+  const Icon = kind === 'watchlist' ? Plus : kind === 'watching' ? Play : Check
 
   return (
     <button
@@ -33,6 +36,7 @@ export function ActionButton({
       aria-disabled={state !== 'idle'}
       aria-busy={state === 'loading'}
       aria-pressed={done}
+      title={iconOnly ? label : undefined}
       onClick={(event) => {
         event.stopPropagation()
         if (state === 'idle') onRun()
@@ -41,6 +45,7 @@ export function ActionButton({
         'inline-flex items-center justify-center gap-1.5 rounded-full font-medium whitespace-nowrap transition',
         size === 'sm' ? 'h-8 px-3 text-xs' : 'h-11 px-5 text-sm',
         iconOnlyOnMobile && 'max-sm:size-9 max-sm:px-0',
+        iconOnly && 'size-8 px-0',
         state === 'idle' &&
           (kind === 'watched'
             ? 'bg-accent text-accent-fg hover:brightness-110'
@@ -56,7 +61,9 @@ export function ActionButton({
       ) : (
         <Icon aria-hidden="true" className="size-4" strokeWidth={done ? 3 : 2} />
       )}
-      <span className={cn(iconOnlyOnMobile && 'max-sm:sr-only')}>{label}</span>
+      <span className={cn(iconOnlyOnMobile && 'max-sm:sr-only', iconOnly && 'sr-only')}>
+        {label}
+      </span>
     </button>
   )
 }

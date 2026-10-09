@@ -159,4 +159,21 @@ describe('SearchCombobox', () => {
     await user.keyboard('{Escape}')
     expect(input).toHaveValue('')
   })
+
+  it('marks a result as "en cours" from the keyboard (third column)', async () => {
+    renderWithProviders(<SearchCombobox variant="popover" />)
+    const { user } = await typeQuery('incep')
+
+    await user.keyboard('{ArrowDown}{ArrowRight}{ArrowRight}{Enter}')
+
+    await waitFor(() => {
+      expect(repository.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ tmdbId: 27205, status: 'watching' }),
+      )
+    })
+    expect(await screen.findByRole('button', { name: 'En cours : Inception' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
 })

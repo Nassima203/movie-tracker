@@ -26,6 +26,12 @@ export const router = createBrowserRouter([
             }),
           },
           {
+            path: 'in-progress',
+            lazy: async () => ({
+              Component: (await import('@/pages/InProgressPage')).InProgressPage,
+            }),
+          },
+          {
             path: 'library',
             lazy: async () => ({ Component: (await import('@/pages/LibraryPage')).LibraryPage }),
           },

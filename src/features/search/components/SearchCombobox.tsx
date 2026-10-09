@@ -42,7 +42,7 @@ function announce(search: TmdbSearchState): string {
 
 /**
  * Search box following the WAI-ARIA combobox pattern with a grid popup:
- * ↑/↓ move between results, ←/→ between [open] [À voir] [Vu],
+ * ↑/↓ move between results, ←/→ between [open] [À voir] [En cours] [Vu],
  * Enter activates, Escape closes (then clears), Tab leaves.
  */
 export function SearchCombobox({
@@ -258,7 +258,7 @@ export function SearchCombobox({
                   onHover={(hoverRow, column) => {
                     setActive({ row: hoverRow, column })
                   }}
-                  size={variant === 'inline' ? 'large' : 'compact'}
+                  size={size === 'lg' ? 'large' : 'compact'}
                 />
               ))}
           </div>

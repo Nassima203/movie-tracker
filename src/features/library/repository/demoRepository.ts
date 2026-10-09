@@ -7,7 +7,7 @@ const STORAGE_KEY = 'uwatch:demo-library'
 const itemSchema = z.object({
   mediaType: z.enum(['movie', 'tv']),
   tmdbId: z.number().int().positive(),
-  status: z.enum(['watchlist', 'watched']),
+  status: z.enum(['watchlist', 'watching', 'watched']),
   title: z.string().min(1),
   originalTitle: z.string().nullable(),
   posterPath: z.string().nullable(),

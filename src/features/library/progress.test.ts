@@ -80,4 +80,15 @@ describe('categorize', () => {
       'in_progress',
     )
   })
+
+  it('puts titles marked "en cours" in progress', () => {
+    expect(categorize(item({ mediaType: 'movie', seasonCount: null, status: 'watching' }))).toBe(
+      'in_progress',
+    )
+    expect(categorize(item({ status: 'watching', watchedSeasons: [] }))).toBe('in_progress')
+  })
+
+  it('keeps a completed series watched even if it was marked "en cours"', () => {
+    expect(categorize(item({ status: 'watching', watchedSeasons: [1, 2, 3] }))).toBe('watched')
+  })
 })

@@ -7,7 +7,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type MediaTypeEnum = 'movie' | 'tv'
-export type LibraryStatusEnum = 'watchlist' | 'watched'
+export type LibraryStatusEnum = 'watchlist' | 'watching' | 'watched'
 
 export interface Database {
   public: {
