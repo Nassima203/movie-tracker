@@ -13,6 +13,9 @@ insert into library_items (media_type, tmdb_id, title) values ('tv', 1396, 'Brea
 insert into library_items (media_type, tmdb_id, title, status, watched_at) values ('movie', 550, 'Fight Club', 'watched', now());
 -- same tmdb id for a movie and a series is allowed
 insert into library_items (media_type, tmdb_id, title) values ('movie', 1396, 'Some movie');
+-- "en cours" status (added by a later migration)
+update library_items set status = 'watching' where media_type = 'movie' and tmdb_id = 1396;
+select pg_temp.expect_error($$update library_items set status = 'watching', watched_at = now() where tmdb_id = 1396 and media_type = 'movie'$$, 'watching with watched_at');
 -- upsert (PostgREST on_conflict) does not duplicate
 insert into library_items (media_type, tmdb_id, title) values ('tv', 1396, 'Breaking Bad')
   on conflict (user_id, media_type, tmdb_id) do update set title = excluded.title;
