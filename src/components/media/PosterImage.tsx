@@ -1,3 +1,7 @@
+/**
+ * Affiche (poster) d'un film ou d'une série, au format 2:3, chargée depuis le
+ * CDN d'images de TMDB, avec une image de remplacement soignée si besoin.
+ */
 import { Clapperboard } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
@@ -6,24 +10,26 @@ import { posterSrcSet, posterUrl } from '@/lib/tmdbImage'
 interface PosterImageProps {
   path: string | null
   title: string
-  /** CSS `sizes` hint for responsive images. */
+  /** Indication CSS `sizes` pour les images responsives. */
   sizes?: string
   className?: string
+  /** Image visible dès l'arrivée sur la page : chargée immédiatement (pas en différé). */
   priority?: boolean
-  /** Thumbnails: the fallback shows the icon only. */
+  /** Miniatures : l'image de remplacement n'affiche que l'icône. */
   compact?: boolean
 }
 
-/** Stable hue per title, so placeholders are varied but never change. */
+/** Teinte stable par titre : les images de remplacement sont variées mais ne changent jamais. */
 function hueFor(title: string): number {
   let hash = 0
+  // Petit hachage du titre, ramené à un angle de teinte entre 0 et 359.
   for (const char of title) hash = (hash * 31 + char.charCodeAt(0)) % 360
   return hash
 }
 
 /**
- * 2:3 poster with a designed fallback when the image is missing or fails.
- * Width is set by the caller.
+ * Affiche 2:3 avec une image de remplacement quand l'image est absente ou ne
+ * se charge pas. La largeur est fixée par le composant parent.
  */
 export function PosterImage({
   path,
@@ -33,6 +39,7 @@ export function PosterImage({
   priority = false,
   compact = false,
 }: PosterImageProps) {
+  // Passe à true si le chargement de l'image échoue (on affiche alors le remplacement).
   const [failed, setFailed] = useState(false)
   const src = posterUrl(path)
   const hue = hueFor(title)
@@ -50,6 +57,7 @@ export function PosterImage({
           srcSet={posterSrcSet(path)}
           sizes={sizes}
           alt={`Affiche de ${title}`}
+          // `lazy` : les affiches hors écran ne sont téléchargées qu'en s'en approchant.
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           onError={() => {
@@ -58,6 +66,8 @@ export function PosterImage({
           className="size-full object-cover"
         />
       ) : (
+        // Accessibilité : `role="img"` + `aria-label` font annoncer ce bloc comme
+        // une image, avec un texte expliquant l'absence d'affiche.
         <div
           role="img"
           aria-label={`Pas d’affiche pour ${title}`}

@@ -1,3 +1,8 @@
+/**
+ * Mise en page commune à toutes les pages connectées : en-tête (logo,
+ * navigation, recherche, thème, menu utilisateur), zone de contenu et barre de
+ * navigation en bas de l'écran sur mobile.
+ */
 import { NavLink, Outlet, useMatch } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { SearchCombobox } from '@/features/search/components/SearchCombobox'
@@ -9,13 +14,19 @@ import { Logo } from './Logo'
 import { NAV_ITEMS } from './navItems'
 import { UserMenu } from './UserMenu'
 
+/**
+ * Gabarit de l'application. La page courante est affichée à la place de
+ * `<Outlet />` (mécanisme des routes imbriquées de React Router).
+ */
 export function AppLayout() {
-  // The home page has its own large search box.
+  // La page d'accueil a son propre grand champ de recherche.
   const isHome = useMatch('/') !== null
 
   return (
     <div className="flex min-h-dvh flex-col">
       <AppBackdrop />
+      {/* Accessibilité : lien d'évitement, invisible sauf au focus clavier, pour
+          sauter directement au contenu sans parcourir toute la navigation. */}
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-fg"
@@ -38,6 +49,8 @@ export function AppLayout() {
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
+                    // `end` : « Accueil » (/) n'est actif que sur la page d'accueil
+                    // exacte, et non sur toutes les URL qui commencent par /.
                     end={item.to === '/'}
                     className={({ isActive }) =>
                       cn(
@@ -72,6 +85,8 @@ export function AppLayout() {
         </div>
       </main>
 
+      {/* Navigation mobile en bas de l'écran ; le padding `safe-area-inset-bottom`
+          évite la barre système des iPhone récents. */}
       <nav
         aria-label="Navigation principale"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-overlay pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"

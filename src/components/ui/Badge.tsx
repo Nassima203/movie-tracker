@@ -1,6 +1,11 @@
+/**
+ * Petite étiquette arrondie (ex. : « Film », « Série », « Démo »), composant
+ * d'interface réutilisable.
+ */
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
+/** Variante de couleur de l'étiquette. */
 type BadgeTone = 'neutral' | 'accent' | 'success'
 
 const tones: Record<BadgeTone, string> = {
@@ -9,6 +14,7 @@ const tones: Record<BadgeTone, string> = {
   success: 'bg-success/15 text-success ring-success/30',
 }
 
+/** Étiquette courte ; `tone` choisit les couleurs (neutre par défaut). */
 export function Badge({
   children,
   tone = 'neutral',

@@ -1,3 +1,8 @@
+/**
+ * Groupe de « puces » de filtre (boutons arrondis) pour les pages de la
+ * bibliothèque. Composant générique réutilisé par les filtres de type et de
+ * catégorie.
+ */
 import { cn } from '@/lib/cn'
 
 interface FilterChipsProps<T extends string> {
@@ -7,7 +12,10 @@ interface FilterChipsProps<T extends string> {
   onChange: (value: T) => void
 }
 
-/** Single-choice filter rendered as a group of toggle buttons. */
+/**
+ * Filtre à choix unique affiché comme un groupe de boutons bascule. Le type
+ * générique `T` garantit que seules les valeurs prévues peuvent être choisies.
+ */
 export function FilterChips<T extends string>({
   label,
   options,
@@ -15,6 +23,8 @@ export function FilterChips<T extends string>({
   onChange,
 }: FilterChipsProps<T>) {
   return (
+    // Accessibilité : `role="group"` + `aria-label` regroupe les boutons sous un
+    // nom commun, et `aria-pressed` annonce le bouton sélectionné.
     <div role="group" aria-label={label} className="flex scrollbar-none gap-2 overflow-x-auto">
       {options.map((option) => {
         const selected = option.value === value

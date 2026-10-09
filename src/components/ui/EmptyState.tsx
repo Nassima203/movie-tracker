@@ -1,3 +1,7 @@
+/**
+ * Message affiché quand une liste est vide (ex. : bibliothèque sans titre),
+ * avec une icône et éventuellement une action pour commencer.
+ */
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -8,6 +12,7 @@ interface EmptyStateProps {
   action?: ReactNode
 }
 
+/** Bloc « état vide » : icône, titre, description et action facultatives. */
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border px-6 py-12 text-center">

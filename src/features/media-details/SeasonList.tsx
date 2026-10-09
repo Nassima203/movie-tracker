@@ -1,3 +1,7 @@
+/**
+ * Liste des saisons d'une série sur sa page de détail : une case à cocher par
+ * saison, une barre de progression et un bouton « Tout marquer vu / non vu ».
+ */
 import { Check } from 'lucide-react'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Spinner } from '@/components/ui/Spinner'
@@ -12,23 +16,31 @@ interface SeasonListProps {
   item: LibraryItem | null
 }
 
+/**
+ * Affiche les saisons d'une série et permet de les cocher. Chaque changement
+ * passe par `useSetSeasonsWatched` (mise à jour optimiste de la bibliothèque).
+ */
 export function SeasonList({ series, item }: SeasonListProps) {
   const setSeasons = useSetSeasonsWatched()
+  // Seules les saisons régulières déjà diffusées comptent dans la progression :
+  // la saison 0 (épisodes spéciaux) et les saisons à venir sont exclues.
   const aired = airedRegularSeasons(series.seasons)
   const airedNumbers = new Set(aired.map((season) => season.seasonNumber))
   const watched = new Set(item?.watchedSeasons ?? [])
+  // Le total est recalculé ici à partir de TMDB (plus à jour que la valeur enregistrée).
   const progress = computeSeriesProgress({
     watchedSeasons: item?.watchedSeasons ?? [],
     seasonCount: aired.length,
   })
   const allWatched = aired.length > 0 && aired.every((season) => watched.has(season.seasonNumber))
 
-  // Regular seasons first, specials (season 0) last: they don't count in the progress.
+  // Saisons régulières d'abord, épisodes spéciaux (saison 0) en dernier : ils ne comptent pas dans la progression.
   const ordered = [
     ...series.seasons.filter((season) => season.seasonNumber > 0),
     ...series.seasons.filter((season) => season.seasonNumber === 0),
   ]
 
+  /** Coche ou décoche les saisons données (en ajoutant la série si nécessaire). */
   function toggle(seasonNumbers: number[], nextWatched: boolean) {
     setSeasons.mutate({ series, seasonNumbers, watched: nextWatched, current: item })
   }
@@ -80,6 +92,7 @@ export function SeasonList({ series, item }: SeasonListProps) {
           <SeasonRow
             key={season.seasonNumber}
             season={season}
+            // La saison 0 reste cochable même sans date : elle n'influence pas la progression.
             isAired={airedNumbers.has(season.seasonNumber) || season.seasonNumber === 0}
             isWatched={watched.has(season.seasonNumber)}
             disabled={setSeasons.isPending}
@@ -101,6 +114,7 @@ interface SeasonRowProps {
   onToggle: (watched: boolean) => void
 }
 
+/** Une ligne de la liste : case à cocher, nom de la saison et détails. */
 function SeasonRow({ season, isAired, isWatched, disabled, onToggle }: SeasonRowProps) {
   const year = formatYear(season.airDate)
   const details = [
@@ -120,6 +134,10 @@ function SeasonRow({ season, isAired, isWatched, disabled, onToggle }: SeasonRow
           (!isAired || disabled) && 'cursor-not-allowed opacity-60',
         )}
       >
+        {/* Accessibilité : une vraie case à cocher native, masquée visuellement
+            (sr-only) mais utilisable au clavier et annoncée par les lecteurs
+            d'écran. Le <label> qui l'entoure lui donne son nom (le nom de la
+            saison) et rend toute la ligne cliquable. */}
         <input
           type="checkbox"
           className="peer sr-only"
@@ -129,6 +147,8 @@ function SeasonRow({ season, isAired, isWatched, disabled, onToggle }: SeasonRow
             onToggle(event.target.checked)
           }}
         />
+        {/* Case dessinée à la place de la case native (décorative, donc aria-hidden).
+            Grâce à `peer`, elle affiche le contour de focus de l'input masqué. */}
         <span
           aria-hidden="true"
           className={cn(

@@ -1,3 +1,7 @@
+/**
+ * En-tête (« hero ») des pages de détail d'un film ou d'une série : image de
+ * fond, affiche, titre, informations, synopsis et emplacement pour les actions.
+ */
 import type { ReactNode } from 'react'
 import { PosterImage } from '@/components/media/PosterImage'
 import { Badge } from '@/components/ui/Badge'
@@ -7,16 +11,21 @@ import type { MediaDetails } from '@/types/media'
 
 interface DetailHeroProps {
   media: MediaDetails
+  /** Informations courtes affichées après l'année (durée, nombre de saisons…) ; null est ignoré. */
   meta: (string | null)[]
+  /** Boutons d'action affichés sous le synopsis. */
   children: ReactNode
 }
 
+/** Grand en-tête de la page de détail, partagé par les films et les séries. */
 export function DetailHero({ media, meta, children }: DetailHeroProps) {
   const backdrop = backdropUrl(media.backdropPath)
   const year = formatYear(media.releaseDate)
 
   return (
     <section className="relative -mx-4 -mt-6 mb-10 overflow-hidden px-4 pt-8 pb-8 sm:-mx-6 sm:px-6 sm:pt-12">
+      {/* Image de fond purement décorative : masquée aux lecteurs d'écran (alt vide,
+          aria-hidden). Les dégradés par-dessus gardent le texte lisible. */}
       {backdrop && (
         <div aria-hidden="true" className="absolute inset-0 -z-10">
           <img src={backdrop} alt="" className="size-full object-cover opacity-40" />

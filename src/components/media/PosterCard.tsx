@@ -1,3 +1,7 @@
+/**
+ * Carte d'un titre dans une grille : affiche, type, pastille de statut
+ * (vu / à voir), année et, pour une série suivie, la progression des saisons.
+ */
 import { Bookmark, Check } from 'lucide-react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
@@ -8,14 +12,17 @@ import type { LibraryItem, MediaSummary } from '@/types/media'
 import { mediaPath } from './mediaPath'
 import { PosterImage } from './PosterImage'
 
+// Largeur affichée de l'affiche selon l'écran : le navigateur choisit ainsi la
+// plus petite image suffisante (attribut `sizes` des images responsives).
 const GRID_SIZES = '(min-width: 1280px) 185px, (min-width: 768px) 20vw, 45vw'
 
 interface PosterCardProps {
   media: MediaSummary
-  /** The user's library entry for this media, when there is one. */
+  /** L'entrée de bibliothèque de l'utilisateur pour ce titre, s'il y en a une. */
   item: LibraryItem | null
 }
 
+/** Carte cliquable menant à la page de détail du titre. */
 export function PosterCard({ media, item }: PosterCardProps) {
   const year = formatYear(media.releaseDate)
   const progress = item?.mediaType === 'tv' ? computeSeriesProgress(item) : null
@@ -38,6 +45,7 @@ export function PosterCard({ media, item }: PosterCardProps) {
         </div>
         {category === 'watched' && (
           <span className="absolute top-2 right-2 inline-flex size-6 items-center justify-center rounded-full bg-accent text-accent-fg shadow">
+            {/* Icône décorative + texte réservé aux lecteurs d'écran (sr-only). */}
             <Check aria-hidden="true" className="size-4" strokeWidth={3} />
             <span className="sr-only">Vu</span>
           </span>
@@ -52,6 +60,8 @@ export function PosterCard({ media, item }: PosterCardProps) {
 
       <div className="flex min-w-0 flex-col gap-1">
         <p className="truncate text-sm font-medium group-hover:text-accent">{media.title}</p>
+        {/* Si rien à afficher, on met une espace insécable : la ligne garde sa
+            hauteur et toutes les cartes restent alignées. */}
         <p className="text-xs text-fg-muted">
           {[
             year,

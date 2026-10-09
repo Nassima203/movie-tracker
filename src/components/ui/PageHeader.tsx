@@ -1,5 +1,10 @@
+/**
+ * En-tête standard d'une page : titre principal (h1), sous-titre facultatif et
+ * emplacement à droite pour des contrôles (filtres, boutons…).
+ */
 import type { ReactNode } from 'react'
 
+/** Titre de page ; les `children` s'affichent à côté (ou dessous sur mobile). */
 export function PageHeader({
   title,
   subtitle,

@@ -1,3 +1,6 @@
+/**
+ * Barre de progression horizontale (ex. : saisons vues d'une série).
+ */
 import { cn } from '@/lib/cn'
 
 interface ProgressBarProps {
@@ -7,11 +10,14 @@ interface ProgressBarProps {
   className?: string
 }
 
+/** Barre remplie à `value / max` ; `label` la décrit pour les lecteurs d'écran. */
 export function ProgressBar({ value, max, label, className }: ProgressBarProps) {
   const percent = max > 0 ? Math.round((value / max) * 100) : 0
 
   return (
     <div
+      // Accessibilité : rôle ARIA `progressbar` avec valeurs min/max/actuelle,
+      // pour que la progression soit annoncée et pas seulement dessinée.
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}

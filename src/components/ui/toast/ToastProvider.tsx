@@ -1,3 +1,8 @@
+/**
+ * Fournisseur des notifications (« toasts ») : garde la liste des messages
+ * affichés, les fait disparaître automatiquement et les affiche en bas de l'écran.
+ * À placer une seule fois, autour de toute l'application.
+ */
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
@@ -9,13 +14,17 @@ interface Toast {
   tone: ToastTone
 }
 
+/** Durée d'affichage d'une notification, en millisecondes. */
 const DURATION_MS = 4500
+/** Nombre maximal de notifications visibles en même temps (les plus anciennes disparaissent). */
 const MAX_VISIBLE = 3
 
 const icons = { info: Info, success: CircleCheck, error: CircleAlert }
 
+/** Rend `notify` disponible à ses enfants et affiche les notifications. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  // Compteur d'identifiants : un `useRef` ne provoque pas de nouveau rendu quand il change.
   const nextId = useRef(0)
 
   const dismiss = useCallback((id: number) => {
@@ -26,6 +35,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (message, tone = 'info') => {
       nextId.current += 1
       const id = nextId.current
+      // On ajoute à la fin et on ne garde que les MAX_VISIBLE plus récentes.
       setToasts((current) => [...current, { id, message, tone }].slice(-MAX_VISIBLE))
       setTimeout(() => {
         dismiss(id)
@@ -34,11 +44,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismiss],
   )
 
+  // Objet mémorisé : il ne change pas à chaque rendu, ce qui évite de
+  // re-rendre inutilement tous les composants qui utilisent le contexte.
   const api = useMemo(() => ({ notify }), [notify])
 
   return (
     <ToastContext value={api}>
       {children}
+      {/* Accessibilité : zone « live » toujours présente dans la page, pour que
+          les lecteurs d'écran annoncent chaque nouveau message sans couper la parole. */}
       <div
         role="status"
         aria-live="polite"

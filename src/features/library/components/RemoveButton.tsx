@@ -1,3 +1,7 @@
+/**
+ * Bouton « Retirer » d'un titre de la bibliothèque, affiché sur les pages de
+ * détail. Le retrait se fait en deux temps (clic puis confirmation).
+ */
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Spinner } from '@/components/ui/Spinner'
@@ -5,7 +9,10 @@ import { cn } from '@/lib/cn'
 import type { MediaRef } from '@/types/media'
 import { useRemoveFromLibrary } from '../hooks/useLibraryActions'
 
-/** Two-step removal: destructive (also deletes season progress), so it asks to confirm. */
+/**
+ * Retrait en deux étapes : l'action est destructive (elle supprime aussi la
+ * progression des saisons), donc on demande une confirmation.
+ */
 export function RemoveButton({ media, title }: { media: MediaRef; title: string }) {
   const [confirming, setConfirming] = useState(false)
   const remove = useRemoveFromLibrary()
@@ -16,12 +23,16 @@ export function RemoveButton({ media, title }: { media: MediaRef; title: string 
         type="button"
         disabled={remove.isPending}
         onClick={() => {
+          // Premier clic : on passe en mode confirmation ; second clic : on retire.
           if (confirming) remove.mutate(media)
           else setConfirming(true)
         }}
         onBlur={() => {
+          // Si le focus quitte le bouton, on annule la demande de confirmation.
           setConfirming(false)
         }}
+        // Accessibilité : le libellé annoncé inclut le titre du média, pour que
+        // l'utilisateur d'un lecteur d'écran sache ce qui sera retiré.
         aria-label={
           confirming ? `Confirmer le retrait de ${title}` : `Retirer ${title} de la bibliothèque`
         }

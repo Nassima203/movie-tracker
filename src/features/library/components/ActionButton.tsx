@@ -1,3 +1,10 @@
+/**
+ * Bouton d'action rapide de la bibliothèque (« À voir », « En cours », « Vu »).
+ *
+ * Utilisé sur les pages de détail et dans les résultats de recherche. Il affiche
+ * un état visuel (inactif, chargement, déjà fait, désactivé) fourni par le hook
+ * `useMediaActions`, et ne déclenche l'action que lorsqu'elle est possible.
+ */
 import { Check, Play, Plus } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 import { Spinner } from '@/components/ui/Spinner'
@@ -10,12 +17,17 @@ interface ActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>
   label: string
   onRun: () => void
   size?: 'sm' | 'md'
-  /** Narrow screens: icon only (the label stays available to screen readers). */
+  /** Écrans étroits : icône seule (le libellé reste lisible par les lecteurs d'écran). */
   iconOnlyOnMobile?: boolean
-  /** Always icon only (compact lists); the label becomes a tooltip. */
+  /** Toujours icône seule (listes compactes) ; le libellé devient une infobulle. */
   iconOnly?: boolean
 }
 
+/**
+ * Bouton rond d'une action de bibliothèque. L'icône dépend du type d'action
+ * (`kind`) et le style de l'état (`state`) ; `onRun` n'est appelé qu'à l'état
+ * « idle » pour éviter les doubles clics pendant une requête.
+ */
 export function ActionButton({
   kind,
   state,
@@ -33,11 +45,16 @@ export function ActionButton({
   return (
     <button
       type="button"
+      // Accessibilité : on utilise `aria-disabled` plutôt que `disabled` pour que
+      // le bouton reste focusable et annoncé ; `aria-busy` signale le chargement
+      // et `aria-pressed` indique que l'action est déjà appliquée.
       aria-disabled={state !== 'idle'}
       aria-busy={state === 'loading'}
       aria-pressed={done}
       title={iconOnly ? label : undefined}
       onClick={(event) => {
+        // Le bouton peut se trouver dans une carte cliquable : on empêche le
+        // clic de remonter jusqu'au lien parent.
         event.stopPropagation()
         if (state === 'idle') onRun()
       }}
@@ -61,6 +78,7 @@ export function ActionButton({
       ) : (
         <Icon aria-hidden="true" className="size-4" strokeWidth={done ? 3 : 2} />
       )}
+      {/* Le libellé est masqué visuellement (sr-only) mais reste lu par les lecteurs d'écran. */}
       <span className={cn(iconOnlyOnMobile && 'max-sm:sr-only', iconOnly && 'sr-only')}>
         {label}
       </span>

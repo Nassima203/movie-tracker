@@ -1,7 +1,14 @@
+/**
+ * Squelette de chargement de la page de détail d'un film ou d'une série :
+ * des blocs gris animés à la place de l'affiche et du texte en attendant TMDB.
+ */
 import { Skeleton } from '@/components/ui/Skeleton'
 
+/** Affiché pendant le chargement des détails, avec la même mise en page que `DetailHero`. */
 export function DetailSkeleton() {
   return (
+    // Accessibilité : `role="status"` + `aria-label` annoncent « Chargement »
+    // aux lecteurs d'écran (les blocs gris, eux, sont masqués).
     <div
       role="status"
       aria-label="Chargement"
