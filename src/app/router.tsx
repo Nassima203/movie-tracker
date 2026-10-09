@@ -9,6 +9,12 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 export const router = createBrowserRouter([
   { path: '/login', Component: LoginPage },
   {
+    path: '/reset-password',
+    lazy: async () => ({
+      Component: (await import('@/pages/ResetPasswordPage')).ResetPasswordPage,
+    }),
+  },
+  {
     Component: ProtectedRoute,
     children: [
       {

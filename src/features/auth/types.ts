@@ -25,6 +25,7 @@ export type AuthErrorKind =
   | 'email_taken'
   | 'email_invalid'
   | 'weak_password'
+  | 'same_password'
   | 'not_allowed'
   | 'rate_limited'
   | 'network'
@@ -46,5 +47,9 @@ export interface AuthGateway {
   onChange(listener: (user: AuthUser | null) => void): () => void
   signIn(credentials: Credentials): Promise<void>
   signUp(credentials: Credentials): Promise<SignUpResult>
+  /** Sends a reset link by email. Resolves even if no account exists (no enumeration). */
+  requestPasswordReset(email: string): Promise<void>
+  /** Sets a new password for the signed-in user (after following the reset link). */
+  updatePassword(password: string): Promise<void>
   signOut(): Promise<void>
 }

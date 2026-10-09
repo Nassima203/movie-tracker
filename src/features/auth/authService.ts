@@ -13,6 +13,14 @@ export function signUp(credentials: Credentials): Promise<SignUpResult> {
   return authGateway.signUp(credentials)
 }
 
+export function requestPasswordReset(email: string): Promise<void> {
+  return authGateway.requestPasswordReset(email)
+}
+
+export function updatePassword(password: string): Promise<void> {
+  return authGateway.updatePassword(password)
+}
+
 export function signOut(): Promise<void> {
   return authGateway.signOut()
 }

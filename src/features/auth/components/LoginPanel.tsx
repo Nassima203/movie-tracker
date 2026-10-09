@@ -1,12 +1,21 @@
 import { Eye, EyeOff, MailCheck } from 'lucide-react'
-import { useId, useState, type ReactNode, type SubmitEvent } from 'react'
+import { useId, useState, type SubmitEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { cn } from '@/lib/cn'
 import { authErrorMessage } from '../authMessages'
 import { signIn, signUp } from '../authService'
+import { clearPasswordResetRequest } from '../passwordRecovery'
 import { rememberPostLoginRedirect } from '../redirect'
-import { validateAuthForm, type AuthFormErrors, type AuthFormValues } from '../validation'
+import {
+  hasErrors,
+  validateAuthForm,
+  type AuthFormErrors,
+  type AuthFormValues,
+} from '../validation'
+import { ForgotPasswordForm } from './ForgotPasswordForm'
+import { Field, Notice } from './formFields'
+import { inputClass } from './formStyles'
 
 type Mode = 'sign-in' | 'sign-up'
 
@@ -24,7 +33,8 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
   const [error, setError] = useState<string | null>(initialError)
   const [isPending, setIsPending] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [confirmationSentTo, setConfirmationSentTo] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ kind: 'sign-up' | 'reset'; email: string } | null>(null)
+  const [showForgot, setShowForgot] = useState(false)
   const id = useId()
 
   function switchMode(next: Mode) {
@@ -45,7 +55,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
 
     const errors = validateAuthForm(values, mode)
     setFieldErrors(errors)
-    if (Object.values(errors).some(Boolean)) return
+    if (hasErrors(errors)) return
 
     const credentials = { email: values.email.trim().toLowerCase(), password: values.password }
     setIsPending(true)
@@ -56,11 +66,13 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
       if (mode === 'sign-in') {
         // On success the auth state changes and the login page redirects.
         await signIn(credentials)
+        // Signed in with a password: no pending reset to resume.
+        clearPasswordResetRequest()
         return
       }
       const result = await signUp(credentials)
       if (result.status === 'confirmation_required') {
-        setConfirmationSentTo(credentials.email)
+        setNotice({ kind: 'sign-up', email: credentials.email })
         switchMode('sign-in')
       }
     } catch (cause) {
@@ -72,6 +84,22 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
   }
 
   const isSignUp = mode === 'sign-up'
+
+  if (showForgot) {
+    return (
+      <ForgotPasswordForm
+        initialEmail={values.email}
+        onBack={() => {
+          setShowForgot(false)
+        }}
+        onSent={(email) => {
+          setShowForgot(false)
+          switchMode('sign-in')
+          setNotice({ kind: 'reset', email })
+        }}
+      />
+    )
+  }
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -92,7 +120,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
             aria-pressed={mode === value}
             onClick={() => {
               switchMode(value)
-              setConfirmationSentTo(null)
+              setNotice(null)
             }}
             className={cn(
               'h-10 rounded-lg text-sm font-medium transition',
@@ -104,18 +132,26 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
         ))}
       </div>
 
-      {confirmationSentTo && (
-        <div
-          role="status"
-          className="flex gap-3 rounded-xl bg-success/10 px-4 py-3 text-sm ring-1 ring-success/30"
-        >
-          <MailCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
-          <p>
-            Compte créé. Un email de confirmation a été envoyé à{' '}
-            <strong className="font-semibold break-all">{confirmationSentTo}</strong>. Cliquez sur
-            le lien qu’il contient, puis connectez-vous ici.
-          </p>
-        </div>
+      {notice && (
+        <Notice>
+          <div className="flex gap-3">
+            <MailCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
+            {notice.kind === 'sign-up' ? (
+              <p>
+                Compte créé. Un email de confirmation a été envoyé à{' '}
+                <strong className="font-semibold break-all">{notice.email}</strong>. Cliquez sur le
+                lien qu’il contient, puis connectez-vous ici.
+              </p>
+            ) : (
+              <p>
+                Si un compte existe pour{' '}
+                <strong className="font-semibold break-all">{notice.email}</strong>, un email vient
+                d’être envoyé. Ouvrez le lien qu’il contient{' '}
+                <strong className="font-semibold">dans ce navigateur</strong>.
+              </p>
+            )}
+          </div>
+        </Notice>
       )}
 
       <form
@@ -171,6 +207,19 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
           </div>
         </Field>
 
+        {!isSignUp && (
+          <button
+            type="button"
+            onClick={() => {
+              setNotice(null)
+              setShowForgot(true)
+            }}
+            className="-mt-2 self-end rounded text-sm text-fg-muted underline-offset-4 hover:text-accent hover:underline"
+          >
+            Mot de passe oublié ?
+          </button>
+        )}
+
         {isSignUp && (
           <Field
             id={`${id}-confirm`}
@@ -203,40 +252,6 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
           {isSignUp ? 'Créer mon compte' : 'Se connecter'}
         </Button>
       </form>
-    </div>
-  )
-}
-
-function inputClass(hasError: boolean): string {
-  return cn(
-    'h-12 w-full rounded-xl border bg-surface px-4 text-base text-fg outline-none transition placeholder:text-fg-muted',
-    'focus-visible:border-accent focus-visible:outline-none',
-    hasError ? 'border-danger' : 'border-border',
-  )
-}
-
-function Field({
-  id,
-  label,
-  error,
-  children,
-}: {
-  id: string
-  label: string
-  error: string | undefined
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
-      {children}
-      {error && (
-        <p id={`${id}-error`} className="text-xs text-danger">
-          {error}
-        </p>
-      )}
     </div>
   )
 }

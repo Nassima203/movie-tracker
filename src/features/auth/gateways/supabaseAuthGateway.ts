@@ -27,6 +27,7 @@ const KIND_BY_CODE: Partial<Record<string, AuthErrorKind>> = {
   email_exists: 'email_taken',
   email_address_invalid: 'email_invalid',
   weak_password: 'weak_password',
+  same_password: 'same_password',
   signup_disabled: 'not_allowed',
   email_address_not_authorized: 'not_allowed',
   over_request_rate_limit: 'rate_limited',
@@ -76,6 +77,20 @@ export function createSupabaseAuthGateway(client: SupabaseClient<Database>): Aut
       })
       if (error) throw toAuthFailure(error)
       return data.session ? { status: 'signed_in' } : { status: 'confirmation_required' }
+    },
+
+    async requestPasswordReset(email) {
+      // The link returns to /login (already an allowed redirect URL); the app then
+      // opens the "new password" page (see passwordRecovery.ts).
+      const { error } = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      })
+      if (error) throw toAuthFailure(error)
+    },
+
+    async updatePassword(password) {
+      const { error } = await client.auth.updateUser({ password })
+      if (error) throw toAuthFailure(error)
     },
 
     async signOut() {

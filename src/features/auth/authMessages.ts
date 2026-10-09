@@ -8,6 +8,7 @@ const MESSAGES: Record<AuthErrorKind, string> = {
   email_invalid: 'Adresse email invalide.',
   weak_password:
     'Mot de passe trop faible : utilisez au moins 8 caractères, avec lettres et chiffres.',
+  same_password: 'Le nouveau mot de passe doit être différent de l’ancien.',
   not_allowed: 'Cette adresse email n’est pas autorisée à créer un compte.',
   rate_limited: 'Trop de tentatives. Réessayez dans quelques minutes.',
   network: 'Impossible de joindre le serveur. Vérifiez votre connexion.',

@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { signIn, signUp } from '@/features/auth/authService'
+import { requestPasswordReset, signIn, signUp } from '@/features/auth/authService'
 import { AuthFailure } from '@/features/auth/types'
 import { fakeUser, renderRoutesWithAuth } from '../../tests/utils/renderWithAuth'
 import { LoginPage } from './LoginPage'
@@ -9,10 +9,12 @@ vi.mock('@/features/auth/authService', () => ({
   signIn: vi.fn(),
   signUp: vi.fn(),
   signOut: vi.fn(),
+  requestPasswordReset: vi.fn(),
 }))
 
 const routes = [
   { path: '/login', Component: LoginPage },
+  { path: '/reset-password', element: <h1>Reset page</h1> },
   { path: '/', element: <h1>Home</h1> },
   { path: '/watchlist', element: <h1>Watchlist</h1> },
 ]
@@ -24,6 +26,7 @@ async function fill(label: RegExp | string, value: string) {
 describe('LoginPage', () => {
   afterEach(() => {
     sessionStorage.clear()
+    localStorage.clear()
   })
 
   it('signs in with email and password and remembers the requested page', async () => {
@@ -144,5 +147,40 @@ describe('LoginPage', () => {
 
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('sends a password reset link without revealing whether the account exists', async () => {
+    vi.mocked(requestPasswordReset).mockResolvedValue(undefined)
+    renderRoutesWithAuth({ status: 'anonymous' }, routes, '/login')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mot de passe oublié ?' }))
+    await fill('Adresse email', 'Me@Example.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Envoyer le lien' }))
+
+    expect(requestPasswordReset).toHaveBeenCalledWith('me@example.com')
+    expect(await screen.findByText(/Si un compte existe pour/)).toBeInTheDocument()
+    expect(localStorage.getItem('uwatch:password-reset-requested-at')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument()
+  })
+
+  it('opens the new password page when coming back from the reset email', async () => {
+    localStorage.setItem('uwatch:password-reset-requested-at', String(Date.now()))
+    renderRoutesWithAuth({ status: 'authenticated', user: fakeUser }, routes, '/login')
+
+    expect(await screen.findByRole('heading', { name: 'Reset page' })).toBeInTheDocument()
+  })
+
+  it('clears a pending reset after a normal sign-in', async () => {
+    localStorage.setItem('uwatch:password-reset-requested-at', String(Date.now()))
+    vi.mocked(signIn).mockResolvedValue(undefined)
+    renderRoutesWithAuth({ status: 'anonymous' }, routes, '/login')
+
+    await fill('Adresse email', 'me@example.com')
+    await fill('Mot de passe', 'secret123')
+    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }))
+
+    await waitFor(() => {
+      expect(localStorage.getItem('uwatch:password-reset-requested-at')).toBeNull()
+    })
   })
 })
