@@ -1,5 +1,5 @@
--- Test-only stand-in for the Supabase environment (roles, auth schema, auth.uid()).
--- Lets the migrations and RLS tests run on a plain PostgreSQL instance.
+-- Imitation de l'environnement Supabase, pour les tests uniquement (rôles, schéma auth, auth.uid()).
+-- Permet d'exécuter les migrations et les tests RLS sur un PostgreSQL ordinaire.
 do $$
 declare r text;
 begin

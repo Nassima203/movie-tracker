@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Applies the migrations to a throwaway database and runs the RLS smoke test.
-# Usage: PGHOST=... PGPORT=... PGUSER=postgres npm run test:db
+# Applique les migrations sur une base jetable puis lance le test de sécurité RLS.
+# Utilisation : PGHOST=... PGPORT=... PGUSER=postgres npm run test:db
 set -euo pipefail
 
 DB="uwatch_rls_test_$$"

@@ -1,10 +1,11 @@
--- uwatch — initial schema
--- Private, per-user library of movies and series (identified by TMDB ids),
--- per-season tracking for series, and a sign-up allowlist.
+-- uwatch — schéma initial
+-- Bibliothèque privée de films et séries par utilisateur (identifiés par leur id TMDB),
+-- suivi saison par saison des séries, et liste des emails autorisés à s'inscrire.
 --
--- Security model: every user table has Row Level Security enabled with explicit
--- policies. `user_id` defaults to auth.uid() and is re-checked by WITH CHECK,
--- so a client can never read or write another user's rows.
+-- Modèle de sécurité : chaque table utilisateur a la Row Level Security (RLS)
+-- activée avec des politiques explicites. `user_id` vaut auth.uid() par défaut
+-- et est revérifié par WITH CHECK : un client ne peut jamais lire ni écrire
+-- les lignes d'un autre utilisateur.
 
 -- ---------------------------------------------------------------------------
 -- Types
@@ -14,7 +15,7 @@ create type public.media_type as enum ('movie', 'tv');
 create type public.library_status as enum ('watchlist', 'watched');
 
 -- ---------------------------------------------------------------------------
--- Shared trigger: keep updated_at in sync
+-- Déclencheur partagé : met à jour updated_at à chaque modification
 -- ---------------------------------------------------------------------------
 
 create or replace function public.set_updated_at()
@@ -29,9 +30,9 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- library_items: one row per (user, media_type, tmdb_id)
--- TMDB ids are only unique per media type, hence the composite identity.
--- Title/poster/date are a display snapshot of TMDB data, refreshed by the app.
+-- library_items : une ligne par (utilisateur, type de média, id TMDB)
+-- Un id TMDB n'est unique que par type (film ou série), d'où la clé composée.
+-- Titre, affiche et date sont une copie d'affichage des données TMDB, rafraîchie par l'application.
 -- ---------------------------------------------------------------------------
 
 create table public.library_items (
@@ -66,9 +67,9 @@ create trigger library_items_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------------
--- watched_seasons: a row exists if and only if the season is watched.
--- The composite FK guarantees the series is in the user's library and cascades
--- deletions when the series is removed.
+-- watched_seasons : une ligne existe si et seulement si la saison est vue.
+-- La clé étrangère composée garantit que la série est dans la bibliothèque de
+-- l'utilisateur, et supprime ses saisons quand la série est retirée (cascade).
 -- ---------------------------------------------------------------------------
 
 create table public.watched_seasons (
@@ -99,7 +100,7 @@ revoke all on public.watched_seasons from anon;
 grant select, insert, update, delete on public.library_items to authenticated;
 grant select, insert, update, delete on public.watched_seasons to authenticated;
 
--- `(select auth.uid())` is evaluated once per statement (initPlan), not per row.
+-- `(select auth.uid())` est évalué une fois par requête (initPlan), pas une fois par ligne.
 
 create policy "library_items: select own"
   on public.library_items for select to authenticated
@@ -136,9 +137,9 @@ create policy "watched_seasons: delete own"
   using ((select auth.uid()) = user_id);
 
 -- ---------------------------------------------------------------------------
--- Sign-up allowlist (uwatch is a personal app)
--- Emails are inserted manually from the Supabase Dashboard (SQL editor), so no
--- personal address is committed to the repository. No client role can read it.
+-- Liste des emails autorisés à s'inscrire (uwatch est une application personnelle)
+-- Les emails sont ajoutés à la main depuis le SQL Editor de Supabase : aucune
+-- adresse personnelle n'est dans le dépôt. Aucun rôle client ne peut lire cette table.
 -- ---------------------------------------------------------------------------
 
 create table public.allowed_emails (
@@ -149,8 +150,8 @@ create table public.allowed_emails (
 alter table public.allowed_emails enable row level security;
 revoke all on public.allowed_emails from anon, authenticated;
 
--- "Before User Created" Auth Hook. Enable it in Dashboard → Authentication → Hooks
--- (Postgres function: public.hook_before_user_created).
+-- Auth Hook « Before User Created » : refuse l'inscription si l'email n'est pas autorisé.
+-- À activer dans Dashboard → Authentication → Hooks (fonction Postgres : public.hook_before_user_created).
 create or replace function public.hook_before_user_created(event jsonb)
 returns jsonb
 language plpgsql
