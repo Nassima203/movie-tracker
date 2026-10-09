@@ -1,3 +1,9 @@
+/**
+ * Une ligne de résultat dans la liste de recherche : affiche, titre, type,
+ * année, et trois boutons d'action rapide (À voir, En cours, Vu).
+ *
+ * Elle fait partie d'une « grille » ARIA pilotée au clavier par `SearchCombobox`.
+ */
 import { PosterImage } from '@/components/media/PosterImage'
 import { Badge } from '@/components/ui/Badge'
 import { ActionButton } from '@/features/library/components/ActionButton'
@@ -6,23 +12,33 @@ import { cn } from '@/lib/cn'
 import { formatYear, mediaTypeLabel } from '@/lib/format'
 import type { LibraryItem, MediaSummary } from '@/types/media'
 
+/**
+ * Nombre de colonnes (cellules navigables) par ligne : [ouvrir] [À voir] [En cours] [Vu].
+ * `SearchCombobox` s'en sert pour borner la navigation avec ←/→.
+ */
 export const SEARCH_COLUMNS = 4
 
 interface SearchResultRowProps {
   media: MediaSummary
+  /** L'entrée correspondante dans la liste de l'utilisateur, ou `null` si le titre n'y est pas. */
   item: LibraryItem | null
+  /** Position de la ligne dans la grille (commence à 0). */
   rowIndex: number
+  /** Colonne mise en évidence par le clavier dans cette ligne, ou `null` si la ligne n'est pas active. */
   activeColumn: number | null
+  /** Génère l'identifiant HTML unique d'une cellule (utilisé par aria-activedescendant). */
   cellId: (row: number, column: number) => string
   onOpen: (media: MediaSummary) => void
+  /** Appelé au survol de la souris pour synchroniser la cellule active avec le pointeur. */
   onHover: (row: number, column: number) => void
   size: 'compact' | 'large'
 }
 
 /**
- * One grid row of the search popup: [open] [À voir] [En cours] [Vu].
- * Focus stays in the input (aria-activedescendant); cells are activated by
- * Enter or by pointer, so action buttons are removed from the tab order.
+ * Une ligne de la grille du menu de recherche : [ouvrir] [À voir] [En cours] [Vu].
+ * Le focus reste dans le champ de saisie (aria-activedescendant) ; les cellules
+ * s'activent avec Entrée ou au pointeur, donc les boutons d'action sont retirés
+ * de l'ordre de tabulation (`tabIndex={-1}`).
  */
 export function SearchResultRow({
   media,
@@ -37,6 +53,7 @@ export function SearchResultRow({
   const actions = useMediaActions(media, item)
   const year = formatYear(media.releaseDate)
 
+  // Encadre la cellule active pour que la navigation au clavier soit visible.
   const cellClass = (column: number) =>
     cn(
       'rounded-lg',

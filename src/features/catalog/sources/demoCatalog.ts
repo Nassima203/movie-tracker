@@ -1,12 +1,18 @@
+/**
+ * Catalogue de démonstration intégré à l'application.
+ *
+ * Mode démo uniquement : un petit catalogue embarqué pour pouvoir explorer
+ * l'interface sans Supabase ni jeton TMDB. Les affiches sont volontairement
+ * absentes (l'interface affiche alors un visuel de remplacement). Les vraies
+ * données proviennent de TMDB.
+ *
+ * Il imite le comportement d'une vraie source (`CatalogSource`) : réponses
+ * asynchrones avec un petit délai, recherche par titre, erreurs « introuvable ».
+ */
 import type { MediaSummary, MovieDetails, SeasonSummary, SeriesDetails } from '@/types/media'
 import type { CatalogSource } from './types'
 
-/**
- * Demo mode only: a small built-in catalog so the interface can be explored
- * without Supabase or a TMDB token. Posters are intentionally absent (the UI
- * falls back to a designed placeholder). Real data comes from TMDB.
- */
-
+/** Forme simplifiée d'une série de démonstration (plus simple que le format TMDB). */
 interface DemoSeries {
   id: number
   title: string
@@ -18,6 +24,7 @@ interface DemoSeries {
   inProduction?: boolean
 }
 
+/** Forme simplifiée d'un film de démonstration. */
 interface DemoMovie {
   id: number
   title: string
@@ -28,6 +35,7 @@ interface DemoMovie {
   runtime: number
 }
 
+// Données de démonstration : films.
 const movies: DemoMovie[] = [
   {
     id: 27205,
@@ -118,6 +126,7 @@ const movies: DemoMovie[] = [
   },
 ]
 
+// Données de démonstration : séries.
 const series: DemoSeries[] = [
   {
     id: 1396,
@@ -222,6 +231,7 @@ const series: DemoSeries[] = [
   },
 ]
 
+/** Convertit une série de démo au format `MediaSummary` utilisé par l'application. */
 function seriesSummary(item: DemoSeries): MediaSummary {
   return {
     mediaType: 'tv',
@@ -233,6 +243,7 @@ function seriesSummary(item: DemoSeries): MediaSummary {
   }
 }
 
+/** Convertit un film de démo au format `MediaSummary` utilisé par l'application. */
 function movieSummary(item: DemoMovie): MediaSummary {
   return {
     mediaType: 'movie',
@@ -244,13 +255,23 @@ function movieSummary(item: DemoMovie): MediaSummary {
   }
 }
 
+/**
+ * Prépare un texte pour une comparaison tolérante : sans accents et en minuscules,
+ * pour que « serie » trouve « Série ».
+ */
 function normalize(text: string): string {
+  // NFD sépare chaque lettre de son accent ; on supprime ensuite les accents.
   return text
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
 }
 
+/**
+ * Renvoie `value` après un court délai pour simuler une requête réseau
+ * (les états de chargement de l'interface sont ainsi visibles en démo).
+ * Si le `signal` est annulé, la promesse est rejetée comme le ferait `fetch`.
+ */
 function delay<T>(value: T, signal?: AbortSignal, ms = 250): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -263,12 +284,15 @@ function delay<T>(value: T, signal?: AbortSignal, ms = 250): Promise<T> {
   })
 }
 
+/** Erreur renvoyée quand l'identifiant demandé n'existe pas dans le catalogue de démo. */
 function notFound(): Error {
   return new Error('Not found in demo catalog')
 }
 
+/** Implémentation de `CatalogSource` basée sur les données de démonstration ci-dessus. */
 export const demoCatalog: CatalogSource = {
   search(query, signal) {
+    // Recherche par sous-chaîne dans le titre ou le titre original, sans tenir compte des accents.
     const needle = normalize(query.trim())
     const results = [...series.map(seriesSummary), ...movies.map(movieSummary)].filter((item) =>
       [item.title, item.originalTitle ?? ''].some((title) => normalize(title).includes(needle)),
@@ -277,6 +301,7 @@ export const demoCatalog: CatalogSource = {
   },
 
   trending(signal) {
+    // Alterne film / série pour obtenir une liste « tendances » variée.
     const mixed = movies.flatMap((movie, index) => {
       const show = series[index]
       return show ? [movieSummary(movie), seriesSummary(show)] : [movieSummary(movie)]
@@ -303,6 +328,7 @@ export const demoCatalog: CatalogSource = {
     const item = series.find((entry) => entry.id === tmdbId)
     if (!item) return Promise.reject(notFound())
 
+    // Les saisons de démo n'ont pas de numéro : on les numérote à partir de 1.
     const seasons: SeasonSummary[] = item.seasons.map((season, index) => ({
       seasonNumber: index + 1,
       name: `Saison ${String(index + 1)}`,

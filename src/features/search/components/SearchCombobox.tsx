@@ -1,3 +1,11 @@
+/**
+ * Barre de recherche avec liste de résultats (« combobox » accessible).
+ *
+ * Utilisée dans l'en-tête (menu déroulant), sur la page d'accueil et sur la
+ * page de recherche. Elle gère la saisie, l'affichage des états (chargement,
+ * erreur, aucun résultat) et la navigation complète au clavier dans les
+ * résultats, conformément au motif WAI-ARIA « combobox ».
+ */
 import { CircleAlert, Search, SearchX, X } from 'lucide-react'
 import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router'
@@ -12,19 +20,25 @@ import { useTmdbSearch, type TmdbSearchState } from '../hooks/useTmdbSearch'
 import { SEARCH_COLUMNS, SearchResultRow } from './SearchResultRow'
 
 interface SearchComboboxProps {
-  /** `popover`: header dropdown. `inline`: full search page, results always shown. */
+  /** `popover` : menu déroulant de l'en-tête. `inline` : page de recherche, résultats toujours visibles. */
   variant: 'popover' | 'inline'
   autoFocus?: boolean
+  /** Nombre maximum de résultats affichés (8 par défaut). */
   maxResults?: number
-  /** Larger input, e.g. in the home page hero. Defaults to large for `inline`. */
+  /** Champ plus grand, ex. dans le bandeau de la page d'accueil. Grand par défaut pour `inline`. */
   size?: 'md' | 'lg'
 }
 
+/** Cellule actuellement mise en évidence par le clavier (ligne et colonne de la grille). */
 interface ActiveCell {
   row: number
   column: number
 }
 
+/**
+ * Texte lu par les lecteurs d'écran pour annoncer l'état de la recherche
+ * (inséré dans une zone `role="status"` invisible à l'écran).
+ */
 function announce(search: TmdbSearchState): string {
   switch (search.status) {
     case 'loading':
@@ -41,9 +55,9 @@ function announce(search: TmdbSearchState): string {
 }
 
 /**
- * Search box following the WAI-ARIA combobox pattern with a grid popup:
- * ↑/↓ move between results, ←/→ between [open] [À voir] [En cours] [Vu],
- * Enter activates, Escape closes (then clears), Tab leaves.
+ * Champ de recherche suivant le motif WAI-ARIA « combobox » avec une grille en popup :
+ * ↑/↓ passent d'un résultat à l'autre, ←/→ entre [ouvrir] [À voir] [En cours] [Vu],
+ * Entrée active, Échap ferme (puis efface), Tab quitte le champ.
  */
 export function SearchCombobox({
   variant,
@@ -57,6 +71,8 @@ export function SearchCombobox({
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  // `useId` fournit un préfixe unique : plusieurs barres de recherche peuvent
+  // coexister sur la page sans conflit d'identifiants HTML.
   const baseId = useId()
   const gridId = `${baseId}-grid`
   const cellId = (row: number, column: number) => `${baseId}-r${String(row)}-c${String(column)}`
@@ -65,30 +81,45 @@ export function SearchCombobox({
   const library = indexLibrary(useLibrary().data)
   const results = search.results.slice(0, maxResults)
   const showPopup = (variant === 'inline' || isOpen) && search.status !== 'idle'
+  // On ignore une cellule active devenue invalide (popup fermé ou moins de résultats qu'avant).
   const activeCell = showPopup && active && active.row < results.length ? active : null
 
+  /** Ferme le menu (en mode popover) et oublie la cellule active. */
   function close() {
     if (variant === 'popover') setIsOpen(false)
     setActive(null)
   }
 
+  /** Ouvre la fiche du titre choisi. */
   function open(media: MediaSummary) {
     close()
     void navigate(mediaPath(media))
   }
 
+  /**
+   * Simule un clic sur la cellule active (touche Entrée) : sur son bouton
+   * s'il y en a un, sinon sur la cellule elle-même (ouverture de la fiche).
+   */
   function activate(cell: ActiveCell) {
     const element = document.getElementById(cellId(cell.row, cell.column))
     const target = element?.querySelector('button') ?? element
     target?.click()
   }
 
+  /**
+   * Navigation clavier. Le focus ne quitte jamais le champ de saisie : on
+   * déplace seulement la cellule « active », que les lecteurs d'écran suivent
+   * grâce à `aria-activedescendant`.
+   */
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     switch (event.key) {
       case 'ArrowDown': {
+        // `preventDefault` empêche le curseur de sauter en fin de texte.
         event.preventDefault()
         setIsOpen(true)
         if (results.length === 0) return
+        // Première pression : première ligne ; ensuite on descend sans dépasser la dernière.
+        // La colonne choisie est conservée d'une ligne à l'autre.
         setActive((current) => ({
           row: current ? Math.min(current.row + 1, results.length - 1) : 0,
           column: current?.column ?? 0,
@@ -98,14 +129,16 @@ export function SearchCombobox({
       case 'ArrowUp': {
         if (!activeCell) return
         event.preventDefault()
+        // Depuis la première ligne, ↑ rend la main au champ de saisie (plus de cellule active).
         setActive(activeCell.row === 0 ? null : { ...activeCell, row: activeCell.row - 1 })
         return
       }
       case 'ArrowRight':
       case 'ArrowLeft': {
-        if (!activeCell) return // keep native caret movement in the input
+        if (!activeCell) return // conserve le déplacement natif du curseur dans le champ
         event.preventDefault()
         const delta = event.key === 'ArrowRight' ? 1 : -1
+        // Borne la colonne entre 0 et la dernière colonne (pas de bouclage).
         const column = Math.min(Math.max(activeCell.column + delta, 0), SEARCH_COLUMNS - 1)
         setActive({ ...activeCell, column })
         return
@@ -117,6 +150,7 @@ export function SearchCombobox({
         return
       }
       case 'Escape': {
+        // 1er appui : ferme le menu ; 2e appui (menu déjà fermé) : efface la saisie.
         if (showPopup && variant === 'popover') {
           event.preventDefault()
           close()
@@ -137,6 +171,8 @@ export function SearchCombobox({
     <div
       ref={containerRef}
       className="relative w-full"
+      // Ferme le menu quand le focus sort du composant (mais pas quand il passe
+      // d'un élément interne à un autre).
       onBlur={(event) => {
         if (!containerRef.current?.contains(event.relatedTarget)) close()
       }}
@@ -202,7 +238,7 @@ export function SearchCombobox({
 
       {showPopup && (
         <div
-          // Keeps focus in the input when clicking inside the popup.
+          // Garde le focus dans le champ de saisie lors d'un clic dans le popup.
           onMouseDown={(event) => {
             event.preventDefault()
           }}

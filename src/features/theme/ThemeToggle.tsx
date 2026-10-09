@@ -1,6 +1,15 @@
+/**
+ * Bouton de bascule entre le mode nuit et le mode jour, affiché dans l'en-tête
+ * de l'application.
+ */
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from './useTheme'
 
+/**
+ * Bouton qui inverse le thème courant au clic.
+ * L'icône et le libellé accessible décrivent l'action à venir (ex. un soleil
+ * en mode nuit = « Activer le mode jour »).
+ */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const isDark = theme === 'dark'
