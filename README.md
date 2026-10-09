@@ -102,7 +102,7 @@ Voir [`.env.example`](./.env.example).
 
 ### 2. Base de données
 
-Appliquer la migration `supabase/migrations/20261008120000_init_library.sql` :
+Appliquer, dans l'ordre, les migrations du dossier `supabase/migrations/` (`20261008120000_init_library.sql`, puis `20261009090000_add_watching_status.sql`) :
 
 - soit avec le CLI : `npx supabase link --project-ref <ref>` puis `npx supabase db push` (si le CLI réclame un `supabase/config.toml`, lancer d'abord `npx supabase init` : il conserve le dossier `migrations/`) ;
 - soit en collant le fichier dans le _SQL Editor_ du Dashboard.
