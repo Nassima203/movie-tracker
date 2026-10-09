@@ -3,10 +3,30 @@
 Application web personnelle pour suivre ses films et séries : **ce que j'ai vu, ce que je veux voir, et où j'en suis dans mes séries.**
 
 - Recherche TMDB instantanée (dès la première lettre), au clavier comme à la souris
-- Films : « À voir » / « Vu »
+- Films et séries : « À voir » / « En cours » / « Vu »
 - Séries : suivi saison par saison, « Tout marquer vu », progression
-- Bibliothèque filtrable, liste « À voir », séries en cours
+- Bibliothèque filtrable, pages « À voir » et « En cours », tendances TMDB
 - Mode nuit (par défaut) et mode jour, responsive mobile-first, accessible
+
+## MVP 1.0 — périmètre
+
+**Disponible**
+
+- Compte personnel : création par email + mot de passe (confirmation par email), connexion, mot de passe oublié, déconnexion. Inscription limitée aux emails autorisés.
+- Recherche TMDB dès la première lettre (debounce, annulation des requêtes obsolètes, clavier complet).
+- Tendances de la semaine sur l'accueil.
+- Statuts **À voir / En cours / Vu** pour les films et les séries, depuis la recherche ou la fiche.
+- Séries : suivi saison par saison, « Tout marquer vu », progression (épisodes spéciaux exclus).
+- Pages Accueil, À voir, En cours, Bibliothèque (filtres statut et type), fiches film et série.
+- Mode nuit (par défaut) et mode jour mémorisés, photo de fond home cinéma, responsive mobile.
+- Sécurité : RLS PostgreSQL, token TMDB côté serveur uniquement, CSP stricte.
+
+**Limites connues**
+
+- Pas de suivi épisode par épisode (volontaire : suivi par saison).
+- Pas de notes, critiques, partage ni recommandations (hors périmètre).
+- Emails envoyés par le service gratuit de Supabase : quelques envois par heure.
+- Le lien de confirmation ou de réinitialisation doit être ouvert dans le navigateur qui a fait la demande.
 
 ## Essayer en local, sans Supabase
 
@@ -102,7 +122,7 @@ Voir [`.env.example`](./.env.example).
 
 ### 2. Base de données
 
-Appliquer, dans l'ordre, les migrations du dossier `supabase/migrations/` (`20261008120000_init_library.sql`, puis `20261009090000_add_watching_status.sql`) :
+Appliquer, dans l'ordre, les migrations du dossier `supabase/migrations/` (`20261008120000_init_library.sql`, `20261009090000_add_watching_status.sql`, puis `20261009100000_index_watched_seasons_fk.sql`) :
 
 - soit avec le CLI : `npx supabase link --project-ref <ref>` puis `npx supabase db push` (si le CLI réclame un `supabase/config.toml`, lancer d'abord `npx supabase init` : il conserve le dossier `migrations/`) ;
 - soit en collant le fichier dans le _SQL Editor_ du Dashboard.
