@@ -4,6 +4,8 @@ Application web personnelle pour suivre ses films et séries : **ce que j'ai vu,
 
 Site en production : <https://movie-tracker-theta-seven.vercel.app>
 
+Document de présentation du MVP : [docs/MVP.md](docs/MVP.md)
+
 ---
 
 ## Sommaire
@@ -354,5 +356,3 @@ Ce que vérifient les tests :
 ---
 
 ## Données
-
-
