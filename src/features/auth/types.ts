@@ -33,6 +33,13 @@ export type SignUpResult =
   /** Compte créé : l'utilisateur doit cliquer sur le lien envoyé par email. */
   | { status: 'confirmation_required' }
 
+/**
+ * Type de lien envoyé par email (même valeurs que l'EmailOtpType de Supabase).
+ * L'app n'utilise pour l'instant que `recovery` (réinitialisation du mot de passe).
+ */
+export type EmailLinkType =
+  'recovery' | 'signup' | 'invite' | 'magiclink' | 'email_change' | 'email'
+
 /** Catégories d'erreurs d'authentification que l'interface sait expliquer. */
 export type AuthErrorKind =
   | 'invalid_credentials'
@@ -43,6 +50,7 @@ export type AuthErrorKind =
   | 'same_password'
   | 'not_allowed'
   | 'rate_limited'
+  | 'link_expired'
   | 'network'
   | 'unknown'
 
@@ -80,5 +88,11 @@ export interface AuthGateway {
   requestPasswordReset(email: string): Promise<void>
   /** Définit un nouveau mot de passe pour l'utilisateur connecté (après le lien de réinitialisation). */
   updatePassword(password: string): Promise<void>
+  /**
+   * Valide le jeton d'un lien reçu par email (`?token_hash=…&type=…`) et ouvre
+   * la session correspondante. Contrairement au flux PKCE, ce lien fonctionne
+   * dans n'importe quel navigateur.
+   */
+  verifyEmailLink(tokenHash: string, type: EmailLinkType): Promise<void>
   signOut(): Promise<void>
 }

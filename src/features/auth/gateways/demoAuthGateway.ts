@@ -78,6 +78,14 @@ export function createDemoAuthGateway(): AuthGateway {
       return Promise.resolve()
     },
 
+    // Aucun vrai jeton en démo : ouvrir le lien connecte simplement l'utilisateur.
+    verifyEmailLink() {
+      signedIn = true
+      writeSignedIn(true)
+      emit()
+      return Promise.resolve()
+    },
+
     signOut() {
       signedIn = false
       writeSignedIn(false)

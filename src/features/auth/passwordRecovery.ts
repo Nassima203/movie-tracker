@@ -5,9 +5,9 @@
  * l'utilisateur revient via le lien reçu par email (ce qui le connecte), l'app
  * l'envoie vers la page « nouveau mot de passe » au lieu de la page d'accueil.
  *
- * Le lien de réinitialisation ne fonctionne que dans le navigateur qui l'a
- * demandé (PKCE) : un indicateur propre au navigateur suffit donc. Il expire
- * en même temps que le lien (1 heure par défaut).
+ * L'indicateur est posé à la demande (ForgotPasswordForm), à la vérification
+ * du lien sur /reset-password, ou à l'événement PASSWORD_RECOVERY de Supabase
+ * (ancien lien ?code=…). Il expire en même temps que le lien (1 heure par défaut).
  */
 
 /** Chemin de la page où l'utilisateur choisit son nouveau mot de passe. */

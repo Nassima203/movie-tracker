@@ -1,92 +1,151 @@
 /**
  * Page « Nouveau mot de passe » (/reset-password).
  *
- * Dernière étape de la réinitialisation : l'utilisateur a demandé un lien,
- * l'a ouvert depuis son email (ce qui l'a connecté), puis a été redirigé ici
- * pour choisir son nouveau mot de passe.
+ * Dernière étape de la réinitialisation : l'utilisateur a demandé un lien et
+ * l'a ouvert depuis son email. Le lien (`?token_hash=…&type=recovery`) est
+ * vérifié ici, ce qui le connecte, puis il choisit son nouveau mot de passe.
  */
-import { Eye, EyeOff } from 'lucide-react'
-import { useId, useState, type SubmitEvent } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { AppBackdrop } from '@/components/layout/AppBackdrop'
+import { Check, Eye, EyeOff } from 'lucide-react'
+import { useEffect, useId, useState, type SubmitEvent } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { FullPageLoader } from '@/components/ui/FullPageLoader'
 import { Spinner } from '@/components/ui/Spinner'
 import { useToast } from '@/components/ui/toast/useToast'
 import { authErrorMessage } from '@/features/auth/authMessages'
-import { updatePassword } from '@/features/auth/authService'
+import { updatePassword, verifyEmailLink } from '@/features/auth/authService'
+import { AuthCard } from '@/features/auth/components/AuthCard'
 import { Field } from '@/features/auth/components/formFields'
 import { inputClass } from '@/features/auth/components/formStyles'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { clearPasswordResetRequest } from '@/features/auth/passwordRecovery'
-import { hasErrors, validateNewPassword } from '@/features/auth/validation'
+import {
+  clearPasswordResetRequest,
+  markPasswordResetRequested,
+  RESET_PASSWORD_PATH,
+} from '@/features/auth/passwordRecovery'
+import { AuthFailure } from '@/features/auth/types'
+import { checkPasswordRules, hasErrors, validateNewPassword } from '@/features/auth/validation'
+import { cn } from '@/lib/cn'
+
+// État de la vérification du jeton présent dans l'URL.
+type LinkState =
+  | { status: 'none' }
+  | { status: 'verifying' }
+  | { status: 'verified' }
+  | { status: 'failed'; message: string | undefined }
 
 /**
- * Atteinte après avoir suivi le lien de réinitialisation reçu par email : le
- * lien connecte l'utilisateur, qui choisit ensuite ici son nouveau mot de passe.
+ * Vérifie le lien de réinitialisation s'il est dans l'URL, puis affiche le
+ * formulaire (session ouverte) ou un message de lien invalide.
  */
 export function ResetPasswordPage() {
   const auth = useAuth()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const tokenHash = searchParams.get('token_hash')
+  const isRecoveryLink = tokenHash !== null && searchParams.get('type') === 'recovery'
+  const [link, setLink] = useState<LinkState>(() =>
+    isRecoveryLink ? { status: 'verifying' } : { status: 'none' },
+  )
 
-  // Le lien est en cours d'échange contre une session : on patiente.
-  if (auth.status === 'loading') return <FullPageLoader label="Vérification du lien…" />
+  useEffect(() => {
+    if (!isRecoveryLink) return
+    let cancelled = false
+    verifyEmailLink(tokenHash, 'recovery')
+      .then(() => {
+        if (cancelled) return
+        markPasswordResetRequested()
+        setLink({ status: 'verified' })
+      })
+      .catch((cause: unknown) => {
+        if (cancelled) return
+        if (import.meta.env.DEV) console.error('[auth] recovery link failed', cause)
+        // Message précis seulement pour une erreur connue (lien expiré, réseau…).
+        const known = cause instanceof AuthFailure && cause.kind !== 'unknown'
+        setLink({ status: 'failed', message: known ? authErrorMessage(cause) : undefined })
+      })
+      .finally(() => {
+        // Le jeton est à usage unique : on le retire de l'URL et de l'historique.
+        if (!cancelled) void navigate(RESET_PASSWORD_PATH, { replace: true })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isRecoveryLink, tokenHash, navigate])
+
+  if (link.status === 'failed') return <ExpiredLink message={link.message} />
+
+  // Vérification du jeton, ou échange d'un ancien lien (?code=…) contre une session.
+  if (
+    link.status === 'verifying' ||
+    auth.status === 'loading' ||
+    (link.status === 'verified' && auth.status !== 'authenticated')
+  ) {
+    return <FullPageLoader label="Vérification du lien…" />
+  }
+
+  // Pas de session : le lien a expiré ou n'a pas pu connecter l'utilisateur.
+  if (auth.status !== 'authenticated') return <ExpiredLink />
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-12">
-      <AppBackdrop />
-      <div className="flex w-full max-w-sm animate-fade-in flex-col gap-6 rounded-3xl border border-border bg-surface-overlay px-6 py-10 shadow-2xl shadow-black/40 backdrop-blur-xl sm:px-8">
-        <h1 className="text-center text-4xl font-bold tracking-tight">
-          u<span className="text-accent">watch</span>
-        </h1>
-        {/* Pas de session : le lien a expiré ou a été ouvert dans un autre navigateur. */}
-        {auth.status === 'authenticated' ? <NewPasswordForm /> : <ExpiredLink />}
-      </div>
-    </main>
+    <AuthCard>
+      <NewPasswordForm />
+    </AuthCard>
   )
 }
 
 // Message affiché quand le lien n'a pas pu connecter l'utilisateur.
-function ExpiredLink() {
+function ExpiredLink({ message }: { message?: string | undefined }) {
   return (
-    <div role="alert" className="flex flex-col gap-4 text-center">
-      <h2 className="text-lg font-semibold">Lien invalide ou expiré</h2>
-      <p className="text-sm text-fg-muted">
-        Ce lien ne fonctionne plus, ou il a été ouvert dans un autre navigateur que celui de la
-        demande. Refaites une demande depuis la page de connexion.
-      </p>
-      <Link
-        to="/login"
-        className="inline-flex h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg hover:brightness-110"
-      >
-        Retour à la connexion
-      </Link>
-    </div>
+    <AuthCard>
+      <div role="alert" className="flex w-full flex-col gap-4 text-center">
+        <h2 className="text-lg font-semibold">Lien invalide ou expiré</h2>
+        <p className="text-sm text-fg-muted">
+          {message ??
+            'Ce lien ne fonctionne plus. Refaites une demande depuis la page de connexion.'}
+        </p>
+        <Link
+          to="/login"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg hover:brightness-110"
+        >
+          Retour à la connexion
+        </Link>
+      </div>
+    </AuthCard>
   )
 }
+
+// Critères affichés sous le premier champ, cochés au fil de la saisie.
+const RULE_LABELS = [
+  ['minLength', '8 caractères minimum'],
+  ['hasLetter', 'Au moins une lettre'],
+  ['hasDigit', 'Au moins un chiffre'],
+] as const
 
 // Formulaire de saisie (et confirmation) du nouveau mot de passe.
 function NewPasswordForm() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  // Le message « ne correspondent pas » n'apparaît qu'une fois la confirmation commencée.
+  const [confirmTouched, setConfirmTouched] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [fieldErrors, setFieldErrors] = useState<{
-    password?: string | undefined
-    confirmPassword?: string | undefined
-  }>({})
   const [error, setError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
   const navigate = useNavigate()
   const { notify } = useToast()
   const id = useId()
 
+  const rules = checkPasswordRules(password)
+  const canSubmit = !hasErrors(validateNewPassword(password, confirmPassword))
+  const mismatch =
+    confirmTouched && confirmPassword !== password
+      ? 'Les deux mots de passe ne correspondent pas.'
+      : undefined
+
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    // Évite un double envoi si l'utilisateur clique plusieurs fois.
-    if (isPending) return
-
-    const errors = validateNewPassword(password, confirmPassword)
-    setFieldErrors(errors)
-    if (hasErrors(errors)) return
+    // Évite un double envoi, ou un envoi au clavier d'un formulaire incomplet.
+    if (isPending || !canSubmit) return
 
     setIsPending(true)
     setError(null)
@@ -101,16 +160,43 @@ function NewPasswordForm() {
       // Message traduit pour l'utilisateur ; le détail brut reste dans la console (dev).
       if (import.meta.env.DEV) console.error('[auth] password update failed', cause)
       setError(authErrorMessage(cause))
-    } finally {
       setIsPending(false)
     }
   }
 
+  // Abandon : l'utilisateur reste connecté et garde son mot de passe actuel.
+  function handleCancel() {
+    clearPasswordResetRequest()
+    void navigate('/', { replace: true })
+  }
+
+  // Bouton œil partagé par les deux champs : il les affiche ou masque ensemble.
+  const toggle = (
+    <button
+      type="button"
+      onClick={() => {
+        setShowPassword((current) => !current)
+      }}
+      aria-label={showPassword ? 'Masquer les mots de passe' : 'Afficher les mots de passe'}
+      aria-pressed={showPassword}
+      aria-controls={`${id}-password ${id}-confirm`}
+      className="absolute inset-y-0 right-1 my-auto inline-flex size-10 items-center justify-center rounded-lg text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      {showPassword ? (
+        <EyeOff aria-hidden="true" className="size-5" />
+      ) : (
+        <Eye aria-hidden="true" className="size-5" />
+      )}
+    </button>
+  )
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-1 text-center">
-        <h2 className="text-lg font-semibold">Nouveau mot de passe</h2>
-        <p className="text-sm text-fg-muted">Choisissez votre nouveau mot de passe.</p>
+        <h2 className="text-lg font-semibold">Créer un nouveau mot de passe</h2>
+        <p className="text-sm text-fg-muted">
+          Choisissez un mot de passe d’au moins 8 caractères, avec des lettres et des chiffres.
+        </p>
       </div>
 
       <form
@@ -118,7 +204,7 @@ function NewPasswordForm() {
         onSubmit={(event) => void handleSubmit(event)}
         className="flex flex-col gap-4"
       >
-        <Field id={`${id}-password`} label="Nouveau mot de passe" error={fieldErrors.password}>
+        <Field id={`${id}-password`} label="Nouveau mot de passe" error={undefined}>
           <div className="relative">
             <input
               id={`${id}-password`}
@@ -127,48 +213,46 @@ function NewPasswordForm() {
               value={password}
               onChange={(event) => {
                 setPassword(event.target.value)
-                setFieldErrors((current) => ({ ...current, password: undefined }))
               }}
-              aria-invalid={fieldErrors.password ? true : undefined}
-              aria-describedby={fieldErrors.password ? `${id}-password-error` : undefined}
-              className={`${inputClass(Boolean(fieldErrors.password))} pr-12`}
+              aria-describedby={`${id}-rules`}
+              className={cn(inputClass(false), 'pr-12')}
             />
-            <button
-              type="button"
-              onClick={() => {
-                setShowPassword((current) => !current)
-              }}
-              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-              aria-pressed={showPassword}
-              className="absolute inset-y-0 right-1 my-auto inline-flex size-10 items-center justify-center rounded-lg text-fg-muted hover:text-fg"
-            >
-              {showPassword ? (
-                <EyeOff aria-hidden="true" className="size-5" />
-              ) : (
-                <Eye aria-hidden="true" className="size-5" />
-              )}
-            </button>
+            {toggle}
           </div>
+          <ul id={`${id}-rules`} aria-label="Critères du mot de passe" className="mt-1 space-y-1">
+            {RULE_LABELS.map(([rule, label]) => (
+              <li
+                key={rule}
+                className={cn(
+                  'flex items-center gap-2 text-xs transition-colors',
+                  rules[rule] ? 'text-success' : 'text-fg-muted',
+                )}
+              >
+                <Check aria-hidden="true" className="size-4 shrink-0" />
+                {label}
+                <span className="sr-only">{rules[rule] ? ' : respecté' : ' : non respecté'}</span>
+              </li>
+            ))}
+          </ul>
         </Field>
 
-        <Field
-          id={`${id}-confirm`}
-          label="Confirmer le mot de passe"
-          error={fieldErrors.confirmPassword}
-        >
-          <input
-            id={`${id}-confirm`}
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(event) => {
-              setConfirmPassword(event.target.value)
-              setFieldErrors((current) => ({ ...current, confirmPassword: undefined }))
-            }}
-            aria-invalid={fieldErrors.confirmPassword ? true : undefined}
-            aria-describedby={fieldErrors.confirmPassword ? `${id}-confirm-error` : undefined}
-            className={inputClass(Boolean(fieldErrors.confirmPassword))}
-          />
+        <Field id={`${id}-confirm`} label="Confirmer le mot de passe" error={mismatch}>
+          <div className="relative">
+            <input
+              id={`${id}-confirm`}
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value)
+                setConfirmTouched(true)
+              }}
+              aria-invalid={mismatch ? true : undefined}
+              aria-describedby={mismatch ? `${id}-confirm-error` : undefined}
+              className={cn(inputClass(Boolean(mismatch)), 'pr-12')}
+            />
+            {toggle}
+          </div>
         </Field>
 
         {error && (
@@ -177,11 +261,24 @@ function NewPasswordForm() {
           </p>
         )}
 
-        <Button type="submit" disabled={isPending} aria-busy={isPending} className="w-full">
+        <Button
+          type="submit"
+          disabled={!canSubmit || isPending}
+          aria-busy={isPending}
+          className="mt-1 w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
           {isPending && <Spinner className="size-4" />}
-          Enregistrer le mot de passe
+          Valider
         </Button>
       </form>
+
+      <button
+        type="button"
+        onClick={handleCancel}
+        className="self-center rounded text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        Annuler
+      </button>
     </div>
   )
 }

@@ -8,7 +8,7 @@
 import { supabase } from '@/lib/supabase'
 import { createDemoAuthGateway } from './gateways/demoAuthGateway'
 import { createSupabaseAuthGateway } from './gateways/supabaseAuthGateway'
-import type { Credentials, SignUpResult } from './types'
+import type { Credentials, EmailLinkType, SignUpResult } from './types'
 
 /**
  * Passerelle d'authentification active : Supabase s'il est configuré
@@ -34,6 +34,21 @@ export function requestPasswordReset(email: string): Promise<void> {
 /** Enregistre un nouveau mot de passe pour l'utilisateur connecté. */
 export function updatePassword(password: string): Promise<void> {
   return authGateway.updatePassword(password)
+}
+
+// Vérifications déjà lancées, par jeton. Un lien ne peut être consommé qu'une
+// fois : sans ce cache, le double effet de StrictMode l'utiliserait deux fois
+// et le second appel échouerait.
+const linkVerifications = new Map<string, Promise<void>>()
+
+/** Valide un lien reçu par email (`token_hash`) ; un même jeton n'est envoyé qu'une fois. */
+export function verifyEmailLink(tokenHash: string, type: EmailLinkType): Promise<void> {
+  let verification = linkVerifications.get(tokenHash)
+  if (!verification) {
+    verification = authGateway.verifyEmailLink(tokenHash, type)
+    linkVerifications.set(tokenHash, verification)
+  }
+  return verification
 }
 
 /** Déconnecte l'utilisateur sur cet appareil. */

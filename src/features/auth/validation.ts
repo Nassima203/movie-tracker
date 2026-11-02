@@ -27,16 +27,33 @@ export function validateEmail(email: string): string | undefined {
   return EMAIL_PATTERN.test(email.trim()) ? undefined : 'Saisissez une adresse email valide.'
 }
 
+/** Critères d'un nouveau mot de passe, vérifiés un par un (affichés en direct). */
+export interface PasswordRules {
+  minLength: boolean
+  hasLetter: boolean
+  hasDigit: boolean
+}
+
+/** Indique, pour chaque critère, s'il est respecté par le mot de passe. */
+export function checkPasswordRules(password: string): PasswordRules {
+  return {
+    minLength: password.length >= MIN_PASSWORD_LENGTH,
+    hasLetter: /[A-Za-z]/.test(password),
+    hasDigit: /\d/.test(password),
+  }
+}
+
 /** Règles pour un mot de passe choisi par l'utilisateur (inscription, réinitialisation). */
 export function validateNewPassword(
   password: string,
   confirmPassword: string,
 ): Pick<AuthFormErrors, 'password' | 'confirmPassword'> {
   const errors: Pick<AuthFormErrors, 'password' | 'confirmPassword'> = {}
+  const rules = checkPasswordRules(password)
 
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  if (!rules.minLength) {
     errors.password = `Au moins ${String(MIN_PASSWORD_LENGTH)} caractères.`
-  } else if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+  } else if (!rules.hasLetter || !rules.hasDigit) {
     // Exige au moins une lettre et au moins un chiffre.
     errors.password = 'Utilisez au moins une lettre et un chiffre.'
   }

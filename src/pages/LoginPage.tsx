@@ -3,12 +3,11 @@
  *
  * Selon l'état de session : affiche un chargement, redirige l'utilisateur
  * déjà connecté, ou présente le panneau de connexion / inscription. C'est
- * aussi la page de retour des liens envoyés par email (confirmation de
- * compte, réinitialisation du mot de passe).
+ * aussi la page de retour des liens de confirmation de compte envoyés par email.
  */
 import { useLocation } from 'react-router'
-import { AppBackdrop } from '@/components/layout/AppBackdrop'
 import { FullPageLoader } from '@/components/ui/FullPageLoader'
+import { AuthCard } from '@/features/auth/components/AuthCard'
 import { LoginPanel } from '@/features/auth/components/LoginPanel'
 import { PostLoginRedirect } from '@/features/auth/components/PostLoginRedirect'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -42,34 +41,24 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-12">
-      <AppBackdrop />
-      <div className="flex w-full max-w-sm animate-fade-in flex-col items-center gap-8 rounded-3xl border border-border bg-surface-overlay px-6 py-10 shadow-2xl shadow-black/40 backdrop-blur-xl sm:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight">
-            u<span className="text-accent">watch</span>
-          </h1>
-          <p className="mt-3 text-fg-muted">Ce que j’ai vu, ce que je veux voir, où j’en suis.</p>
-        </div>
-
-        <div className="flex w-full flex-col gap-1 text-center">
-          <h2 className="text-lg font-semibold">Bienvenue</h2>
-          <p className="text-sm text-fg-muted">Connectez-vous ou créez votre compte.</p>
-        </div>
-
-        <LoginPanel
-          redirectTo={readFromState(location.state)}
-          initialError={getAuthRedirectErrorMessage(location)}
-        />
-
-        {isDemoMode && (
-          <p className="rounded-xl bg-accent/10 px-4 py-3 text-center text-xs text-fg ring-1 ring-accent/30">
-            <strong className="font-semibold">Mode démo</strong> : Supabase n’est pas configuré.
-            N’importe quel email et mot de passe fonctionnent, et vos données restent dans ce
-            navigateur.
-          </p>
-        )}
+    <AuthCard>
+      <div className="flex w-full flex-col gap-1 text-center">
+        <h2 className="text-lg font-semibold">Bienvenue</h2>
+        <p className="text-sm text-fg-muted">Connectez-vous ou créez votre compte.</p>
       </div>
-    </main>
+
+      <LoginPanel
+        redirectTo={readFromState(location.state)}
+        initialError={getAuthRedirectErrorMessage(location)}
+      />
+
+      {isDemoMode && (
+        <p className="rounded-xl bg-accent/10 px-4 py-3 text-center text-xs text-fg ring-1 ring-accent/30">
+          <strong className="font-semibold">Mode démo</strong> : Supabase n’est pas configuré.
+          N’importe quel email et mot de passe fonctionnent, et vos données restent dans ce
+          navigateur.
+        </p>
+      )}
+    </AuthCard>
   )
 }

@@ -9,6 +9,7 @@ function LoginProbe() {
 
 const routes = [
   { path: '/login', Component: LoginProbe },
+  { path: '/reset-password', element: <h1>Reset password</h1> },
   {
     Component: ProtectedRoute,
     children: [{ path: '/watchlist', element: <h1>Private watchlist</h1> }],
@@ -36,5 +37,18 @@ describe('ProtectedRoute', () => {
     renderRoutesWithAuth(auth, routes, '/watchlist')
 
     expect(screen.getByRole('heading', { name: 'Private watchlist' })).toBeInTheDocument()
+  })
+
+  it('sends a signed-in user with a pending password reset to /reset-password', () => {
+    localStorage.setItem('uwatch:password-reset-requested-at', String(Date.now()))
+    const router = renderRoutesWithAuth(
+      { status: 'authenticated', user: fakeUser },
+      routes,
+      '/watchlist',
+    )
+
+    expect(screen.getByRole('heading', { name: 'Reset password' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/reset-password')
+    localStorage.clear()
   })
 })

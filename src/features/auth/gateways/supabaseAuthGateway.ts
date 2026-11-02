@@ -7,6 +7,7 @@
  */
 import { isAuthError, type SupabaseClient, type User } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import { markPasswordResetRequested } from '../passwordRecovery'
 import { AuthFailure, type AuthErrorKind, type AuthGateway, type AuthUser } from '../types'
 
 /** Ne garde de l'utilisateur Supabase que ce dont l'application a besoin. */
@@ -28,6 +29,10 @@ const KIND_BY_CODE: Partial<Record<string, AuthErrorKind>> = {
   email_address_not_authorized: 'not_allowed',
   over_request_rate_limit: 'rate_limited',
   over_email_send_rate_limit: 'rate_limited',
+  otp_expired: 'link_expired',
+  flow_state_expired: 'link_expired',
+  flow_state_not_found: 'link_expired',
+  bad_code_verifier: 'link_expired',
 }
 
 /**
@@ -58,7 +63,10 @@ export function createSupabaseAuthGateway(client: SupabaseClient<Database>): Aut
     onChange(listener) {
       // Callback synchrone volontairement : supabase-js déconseille les callbacks
       // async car ils peuvent provoquer un blocage pendant le rafraîchissement du jeton.
-      const { data } = client.auth.onAuthStateChange((_event, session) => {
+      const { data } = client.auth.onAuthStateChange((event, session) => {
+        // Ancien format de lien (?code=…, échangé par detectSessionInUrl) : on
+        // retient la réinitialisation pour ouvrir la page « nouveau mot de passe ».
+        if (event === 'PASSWORD_RECOVERY') markPasswordResetRequested()
         listener(session ? toAuthUser(session.user) : null)
       })
       return () => {
@@ -84,16 +92,21 @@ export function createSupabaseAuthGateway(client: SupabaseClient<Database>): Aut
     },
 
     async requestPasswordReset(email) {
-      // Le lien revient sur /login (déjà autorisée comme URL de redirection) ;
-      // l'app ouvre ensuite la page « nouveau mot de passe » (voir passwordRecovery.ts).
+      // Le lien mène directement à la page « nouveau mot de passe » (cette URL
+      // doit figurer dans les Redirect URLs du projet Supabase).
       const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}/reset-password`,
       })
       if (error) throw toAuthFailure(error)
     },
 
     async updatePassword(password) {
       const { error } = await client.auth.updateUser({ password })
+      if (error) throw toAuthFailure(error)
+    },
+
+    async verifyEmailLink(tokenHash, type) {
+      const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type })
       if (error) throw toAuthFailure(error)
     },
 

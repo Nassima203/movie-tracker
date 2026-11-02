@@ -21,6 +21,7 @@ const MESSAGES: Record<AuthErrorKind, string> = {
   same_password: 'Le nouveau mot de passe doit être différent de l’ancien.',
   not_allowed: 'Cette adresse email n’est pas autorisée à créer un compte.',
   rate_limited: 'Trop de tentatives. Réessayez dans quelques minutes.',
+  link_expired: 'Ce lien a expiré ou a déjà été utilisé. Refaites une demande.',
   network: 'Impossible de joindre le serveur. Vérifiez votre connexion.',
   unknown: 'La connexion a échoué. Veuillez réessayer.',
 }
