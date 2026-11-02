@@ -2,7 +2,7 @@
 
 Application web pour suivre ses films et séries : **ce que j'ai vu, ce que je veux voir, et où j'en suis dans mes séries.**
 
-**Site en ligne** : <https://movie-tracker-nassima1.vercel.app>
+**Site en ligne** : <https://movie-tracker-theta-seven.vercel.app>
 
 ---
 
