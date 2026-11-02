@@ -32,6 +32,7 @@ Application web pour suivre ses films et séries : **ce que j'ai vu, ce que je v
 | Séries              | Cocher les saisons vues et suivre sa progression (ex. 2/5 saisons)                                                                             |
 | Pages               | Accueil avec tendances, À voir, En cours, Bibliothèque filtrable, fiches film et série                                                         |
 | Affichage           | Mode sombre / clair mémorisé, responsive mobile, tablette et ordinateur                                                                        |
+| Langue              | Bouton **FR / EN** : tout le site passe en anglais, y compris les titres et résumés des films                                                  |
 | Mode démo           | Sans configuration, l'app fonctionne avec un catalogue intégré et des données locales                                                          |
 
 ---
@@ -87,6 +88,14 @@ Une fois les problèmes corrigés, j'ai nettoyé ce qu'ils avaient laissé derri
 - **Code plus simple** : une seule règle décide d'envoyer vers la page « nouveau mot de passe » (la garde des routes privées), au lieu de trois endroits différents.
 - **Textes corrigés** : l'app ne demande plus d'ouvrir le lien « dans ce navigateur », puisque ce n'est plus nécessaire.
 - **Documentation** : commentaires OAuth obsolètes retirés, document MVP mis à jour (adresse du site, inscription ouverte).
+
+### Étape 7 : version anglaise et nettoyage final (2 novembre 2026)
+
+- **Bouton FR / EN** dans l'en-tête et sur les pages de connexion : tout le site passe en anglais (menus, boutons, messages d'erreur, textes pour les lecteurs d'écran). Le choix est mémorisé dans le navigateur.
+- **Titres et résumés des films en anglais** : la langue choisie est transmise à TMDB par le proxy, qui n'accepte que le français ou l'anglais.
+- **Un seul fichier pour tous les textes** (`src/features/i18n/translations.ts`) : chaque texte existe en français et en anglais, et TypeScript signale toute traduction manquante.
+- **Sécurité préservée** : l'empreinte du script de démarrage a été mise à jour dans la politique de sécurité (CSP), sinon le navigateur l'aurait bloqué en production.
+- **Nettoyage** : suppression du document `docs/MVP.md`, qui décrivait la version 1.0 et faisait doublon avec ce README.
 
 ---
 
@@ -185,13 +194,13 @@ src/
     search/             Recherche instantanée
     media-details/      Fiches film et série
     theme/              Mode clair / sombre
+    i18n/               Langue du site : textes FR / EN et bouton de changement
   components/           Composants réutilisables (boutons, cartes, mise en page)
   lib/                  Outils partagés (client Supabase, configuration, formats)
 supabase/
   migrations/           Création des tables et des règles de sécurité (identiques à la production)
   tests/                Tests de sécurité de la base
 tests/                  Outils de test partagés
-docs/                   Document de présentation du MVP
 ```
 
 Chaque fonctionnalité est rangée dans son propre dossier, avec ses composants, sa logique et ses tests. L'authentification et la bibliothèque passent par une **interface commune**, qui permet de basculer entre Supabase et le mode démo sans changer le reste du code.
@@ -237,7 +246,7 @@ npm run lint        # règles ESLint
 npm run build       # build de production
 ```
 
-Les tests (170) couvrent l'authentification (connexion, inscription, mot de passe oublié, liens expirés, routes protégées), la recherche, la bibliothèque, la progression des séries, le thème et le proxy TMDB.
+Les tests (173) couvrent l'authentification (connexion, inscription, mot de passe oublié, liens expirés, routes protégées), la recherche, la bibliothèque, la progression des séries, le thème, le changement de langue et le proxy TMDB.
 
 ---
 
@@ -248,7 +257,7 @@ Ce projet a été réalisé dans le cadre d'un module HETIC sur le **développem
 - Le code a été généré avec **Claude Code**, à partir de mes demandes.
 - J'ai relu, testé en conditions réelles et fait corriger le code jusqu'à ce que tout fonctionne.
 - J'ai configuré moi-même la connexion à l'API TMDB, le projet Supabase, l'envoi d'emails avec Brevo et le déploiement Vercel.
-- Lors de la mise en ligne, j'ai diagnostiqué les problèmes d'authentification à partir des journaux Supabase avant de les faire corriger (voir l'étape 5), puis fait nettoyer ce qu'ils avaient laissé dans le code (étape 6).
+- Lors de la mise en ligne, j'ai diagnostiqué les problèmes d'authentification à partir des journaux Supabase avant de les faire corriger (voir l'étape 5), puis fait nettoyer ce qu'ils avaient laissé dans le code (étape 6) avant d'ajouter la version anglaise (étape 7).
 
 ---
 
@@ -256,6 +265,7 @@ Ce projet a été réalisé dans le cadre d'un module HETIC sur le **développem
 
 - Nom de domaine personnel, pour que les emails ne partent plus d'une adresse Gmail.
 - Lien de confirmation d'inscription au même format `token_hash` que le mot de passe oublié.
+- Traduire aussi le catalogue de démonstration, qui reste en français en mode démo.
 - Notes et avis personnels sur les titres.
 - Suivi épisode par épisode, et pas seulement saison par saison.
 - Statistiques (temps passé, genres préférés).
