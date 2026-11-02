@@ -12,8 +12,8 @@ import type { AuthState } from './types'
 
 /**
  * Source de vérité de la session. L'état reste `loading` tant que la passerelle
- * n'a pas signalé la session initiale (session stockée ou code de redirection
- * OAuth) : ainsi, les pages privées ne s'affichent jamais furtivement.
+ * n'a pas signalé la session initiale (session stockée ou lien reçu par
+ * email) : ainsi, les pages privées ne s'affichent jamais furtivement.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' })

@@ -173,8 +173,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
               <p>
                 Si un compte existe pour{' '}
                 <strong className="font-semibold break-all">{notice.email}</strong>, un email vient
-                d’être envoyé. Ouvrez le lien qu’il contient{' '}
-                <strong className="font-semibold">dans ce navigateur</strong>.
+                d’être envoyé. Ouvrez le lien qu’il contient pour choisir un nouveau mot de passe.
               </p>
             )}
           </div>

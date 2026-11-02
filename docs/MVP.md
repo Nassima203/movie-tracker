@@ -6,17 +6,17 @@ Octobre 2026 · Nassima
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
 | Produit                 | uwatch, application web de suivi de films et séries                                                |
 | Version                 | 1.0 (MVP)                                                                                          |
-| Application en ligne    | [movie-tracker-theta-seven.vercel.app](https://movie-tracker-theta-seven.vercel.app)               |
+| Application en ligne    | [movie-tracker-nassima1.vercel.app](https://movie-tracker-nassima1.vercel.app)                     |
 | Code source             | [github.com/Nassima203/movie-tracker](https://github.com/Nassima203/movie-tracker), branche `main` |
 | Documentation technique | [README](../README.md) du dépôt (en français)                                                      |
 
 ## En bref
 
-uwatch 1.0 est en ligne : une application web personnelle pour savoir ce que j'ai vu, ce que je veux voir et où j'en suis dans mes séries. Le site est accessible sur [movie-tracker-theta-seven.vercel.app](https://movie-tracker-theta-seven.vercel.app).
+uwatch 1.0 est en ligne : une application web personnelle pour savoir ce que j'ai vu, ce que je veux voir et où j'en suis dans mes séries. Le site est accessible sur [movie-tracker-nassima1.vercel.app](https://movie-tracker-nassima1.vercel.app).
 
 Le MVP couvre le compte personnel, la recherche de films et séries via TMDB, trois statuts (À voir, En cours, Vu) et le suivi des séries saison par saison. Il est volontairement minimaliste : pas de notes, de critiques ni de réseau social.
 
-Un seul compte peut s'inscrire : l'adresse autorisée dans la base. Les données de chaque utilisateur sont isolées par la base elle-même.
+L'inscription est ouverte à tous. Les données de chaque utilisateur sont isolées par la base elle-même.
 
 ## Contexte et objectifs
 
@@ -61,7 +61,7 @@ Chaque parcours tient en quelques clics, sans quitter la page en cours.
 **Mot de passe oublié**
 
 1. « Mot de passe oublié ? » sous le champ mot de passe, puis saisie de l'email.
-2. Le lien reçu par email, ouvert dans le même navigateur, mène à la page « Nouveau mot de passe ».
+2. Le lien reçu par email, ouvert dans n'importe quel navigateur, mène à la page « Nouveau mot de passe ».
 3. Le nouveau mot de passe est enregistré et l'utilisatrice arrive sur l'accueil.
 
 **Suivre un film ou une série**
@@ -123,7 +123,6 @@ Chaque outil a été choisi pour aller vite, rester simple et ne rien coûter au
 ## Sécurité
 
 - **Données privées** : chaque personne ne voit que sa propre bibliothèque. C'est la base de données elle-même qui l'impose.
-- **Accès réservé** : seules les adresses email autorisées peuvent créer un compte.
 - **Clés protégées** : aucune clé secrète n'est visible dans le site ni sur GitHub.
 
 ## Validation

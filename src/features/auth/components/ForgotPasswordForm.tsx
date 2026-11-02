@@ -2,8 +2,7 @@
  * Formulaire « Mot de passe oublié ».
  *
  * Affiché à la place du formulaire de connexion quand l'utilisateur clique sur
- * « Mot de passe oublié ? ». Il envoie la demande de lien de réinitialisation
- * puis mémorise cette demande pour que l'app ouvre la bonne page au retour.
+ * « Mot de passe oublié ? ». Il envoie la demande de lien de réinitialisation.
  */
 import { ArrowLeft } from 'lucide-react'
 import { useId, useState, type SubmitEvent } from 'react'
@@ -11,7 +10,6 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { authErrorMessage } from '../authMessages'
 import { requestPasswordReset } from '../authService'
-import { markPasswordResetRequested } from '../passwordRecovery'
 import { validateEmail } from '../validation'
 import { Field } from './formFields'
 import { inputClass } from './formStyles'
@@ -53,9 +51,6 @@ export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPassw
     setError(null)
     try {
       await requestPasswordReset(normalized)
-      // Retient la demande : au retour via le lien, l'app ouvrira la page
-      // « nouveau mot de passe » (voir PostLoginRedirect).
-      markPasswordResetRequested()
       onSent(normalized)
     } catch (cause) {
       // Détail technique en développement seulement ; l'utilisateur voit un message clair.

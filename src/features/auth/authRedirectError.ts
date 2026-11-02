@@ -32,7 +32,7 @@ export function getAuthRedirectErrorMessage(
 
   // Le détail technique n'est journalisé qu'en développement, jamais affiché.
   if (import.meta.env.DEV) {
-    console.error('[auth] OAuth redirect error', { error, description })
+    console.error('[auth] redirect error', { error, description })
   }
 
   if (code === 'otp_expired') {

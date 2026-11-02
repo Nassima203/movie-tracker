@@ -25,8 +25,6 @@ const KIND_BY_CODE: Partial<Record<string, AuthErrorKind>> = {
   email_address_invalid: 'email_invalid',
   weak_password: 'weak_password',
   same_password: 'same_password',
-  signup_disabled: 'not_allowed',
-  email_address_not_authorized: 'not_allowed',
   over_request_rate_limit: 'rate_limited',
   over_email_send_rate_limit: 'rate_limited',
   otp_expired: 'link_expired',
@@ -48,8 +46,6 @@ export function toAuthFailure(error: unknown): AuthFailure {
   if (byCode) return new AuthFailure(byCode, error.message)
 
   // 2. Sinon, on se rabat sur le statut HTTP.
-  // Le hook « Before User Created » (liste blanche d'inscription) répond en HTTP 403.
-  if (error.status === 403) return new AuthFailure('not_allowed', error.message)
   if (error.status === 429) return new AuthFailure('rate_limited', error.message)
   if (error.status === 0 || error.name === 'AuthRetryableFetchError') {
     return new AuthFailure('network', error.message)

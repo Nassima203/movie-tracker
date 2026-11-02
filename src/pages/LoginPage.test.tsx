@@ -103,24 +103,6 @@ describe('LoginPage', () => {
     expect(signUp).not.toHaveBeenCalled()
   })
 
-  it('explains when the email is not on the allowlist', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    vi.mocked(signUp).mockRejectedValue(
-      new AuthFailure('not_allowed', 'This account is not allowed'),
-    )
-    renderRoutesWithAuth({ status: 'anonymous' }, routes, '/login')
-
-    await userEvent.click(screen.getByRole('button', { name: 'Créer un compte' }))
-    await fill('Adresse email', 'intruder@example.com')
-    await fill('Mot de passe', 'secret123')
-    await fill('Confirmer le mot de passe', 'secret123')
-    await userEvent.click(screen.getByRole('button', { name: 'Créer mon compte' }))
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Cette adresse email n’est pas autorisée à créer un compte.',
-    )
-  })
-
   it('shows an error returned in the redirect URL (expired confirmation link)', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     renderRoutesWithAuth(
@@ -159,15 +141,7 @@ describe('LoginPage', () => {
 
     expect(requestPasswordReset).toHaveBeenCalledWith('me@example.com')
     expect(await screen.findByText(/Si un compte existe pour/)).toBeInTheDocument()
-    expect(localStorage.getItem('uwatch:password-reset-requested-at')).not.toBeNull()
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument()
-  })
-
-  it('opens the new password page when coming back from the reset email', async () => {
-    localStorage.setItem('uwatch:password-reset-requested-at', String(Date.now()))
-    renderRoutesWithAuth({ status: 'authenticated', user: fakeUser }, routes, '/login')
-
-    expect(await screen.findByRole('heading', { name: 'Reset page' })).toBeInTheDocument()
   })
 
   it('clears a pending reset after a normal sign-in', async () => {

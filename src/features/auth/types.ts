@@ -48,7 +48,6 @@ export type AuthErrorKind =
   | 'email_invalid'
   | 'weak_password'
   | 'same_password'
-  | 'not_allowed'
   | 'rate_limited'
   | 'link_expired'
   | 'network'

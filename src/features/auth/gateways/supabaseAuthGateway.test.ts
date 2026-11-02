@@ -14,7 +14,6 @@ describe('toAuthFailure', () => {
     [new AuthApiError('Flow state expired', 400, 'flow_state_expired'), 'link_expired'],
     [new AuthApiError('Flow state not found', 404, 'flow_state_not_found'), 'link_expired'],
     [new AuthApiError('Bad code verifier', 400, 'bad_code_verifier'), 'link_expired'],
-    [new AuthApiError('This account is not allowed to sign up.', 403, undefined), 'not_allowed'],
     [new AuthApiError('Too many requests', 429, undefined), 'rate_limited'],
     [new AuthRetryableFetchError('Failed to fetch', 0), 'network'],
     [new Error('boom'), 'network'],

@@ -10,10 +10,9 @@ import type { Database } from '@/types/database'
  * Client Supabase partagé par toute l'application (`null` en mode démo).
  *
  * - `flowType: 'pkce'` : la bibliothèque utilise `implicit` par défaut ; PKCE évite
- *   d'exposer les jetons dans le fragment de l'URL et c'est le flux recommandé
- *   pour OAuth dans une application monopage (SPA).
- * - `detectSessionInUrl` : échange le `?code=` renvoyé par la redirection OAuth
- *   contre une session.
+ *   d'exposer les jetons dans le fragment de l'URL.
+ * - `detectSessionInUrl` : échange le `?code=` d'un lien reçu par email (ex. :
+ *   confirmation de compte) contre une session.
  */
 export const supabase: SupabaseClient<Database> | null = env.supabase
   ? createClient<Database>(env.supabase.url, env.supabase.publishableKey, {

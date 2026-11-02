@@ -28,7 +28,7 @@ export function validateEmail(email: string): string | undefined {
 }
 
 /** Critères d'un nouveau mot de passe, vérifiés un par un (affichés en direct). */
-export interface PasswordRules {
+interface PasswordRules {
   minLength: boolean
   hasLetter: boolean
   hasDigit: boolean
