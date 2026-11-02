@@ -2,6 +2,7 @@ import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router'
 import { AuthContext } from '@/features/auth/AuthContext'
 import type { AuthState, AuthUser } from '@/features/auth/types'
+import { ThemeProvider } from '@/features/theme/ThemeProvider'
 
 export const fakeUser: AuthUser = {
   id: 'user-1',
@@ -16,9 +17,11 @@ export function renderRoutesWithAuth(
   const router = createMemoryRouter(routes, { initialEntries: [initialEntry] })
 
   render(
-    <AuthContext value={auth}>
-      <RouterProvider router={router} />
-    </AuthContext>,
+    <ThemeProvider>
+      <AuthContext value={auth}>
+        <RouterProvider router={router} />
+      </AuthContext>
+    </ThemeProvider>,
   )
 
   return router

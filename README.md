@@ -91,6 +91,7 @@ Une fois les problèmes corrigés, j'ai nettoyé ce qu'ils avaient laissé derri
 
 ### Étape 7 : version anglaise et nettoyage final (2 novembre 2026)
 
+- **Boutons langue et thème sur la page de connexion** : on peut choisir FR / EN et le mode jour / nuit avant même de se connecter.
 - **Bouton FR / EN** dans l'en-tête et sur les pages de connexion : tout le site passe en anglais (menus, boutons, messages d'erreur, textes pour les lecteurs d'écran). Le choix est mémorisé dans le navigateur.
 - **Titres et résumés des films en anglais** : la langue choisie est transmise à TMDB par le proxy, qui n'accepte que le français ou l'anglais.
 - **Un seul fichier pour tous les textes** (`src/features/i18n/translations.ts`) : chaque texte existe en français et en anglais, et TypeScript signale toute traduction manquante.
@@ -246,7 +247,7 @@ npm run lint        # règles ESLint
 npm run build       # build de production
 ```
 
-Les tests (173) couvrent l'authentification (connexion, inscription, mot de passe oublié, liens expirés, routes protégées), la recherche, la bibliothèque, la progression des séries, le thème, le changement de langue et le proxy TMDB.
+Les tests (174) couvrent l'authentification (connexion, inscription, mot de passe oublié, liens expirés, routes protégées), la recherche, la bibliothèque, la progression des séries, le thème, le changement de langue et le proxy TMDB.
 
 ---
 

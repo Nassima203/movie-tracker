@@ -124,6 +124,13 @@ describe('LoginPage', () => {
     expect(sessionStorage.getItem('uwatch:post-login-redirect')).toBeNull()
   })
 
+  it('offers the language and theme toggles before signing in', () => {
+    renderRoutesWithAuth({ status: 'anonymous' }, routes, '/login')
+
+    expect(screen.getByRole('group', { name: 'Langue' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Activer le mode (jour|nuit)/ })).toBeInTheDocument()
+  })
+
   it('waits for the session before rendering the form', () => {
     renderRoutesWithAuth({ status: 'loading' }, routes, '/login')
 
