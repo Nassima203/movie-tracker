@@ -17,6 +17,11 @@ describe('resolveTmdbRoute', () => {
     })
   })
 
+  it('returns TMDB texts in English when asked', () => {
+    const route = resolve('resource=movie&id=550&language=en-US')
+    expect(route.ok && route.upstream.params.language).toBe('en-US')
+  })
+
   it('accepts a single-character search (search starts at the first character)', () => {
     expect(resolve('resource=search&query=a').ok).toBe(true)
   })

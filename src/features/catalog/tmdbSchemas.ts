@@ -11,9 +11,9 @@
  */
 import { z } from 'zod'
 import type { MediaSummary, MovieDetails, SeasonSummary, SeriesDetails } from '@/types/media'
+import { t } from '@/features/i18n/i18n'
 
 /** Titre affiché quand TMDB ne fournit aucun titre exploitable. */
-const UNTITLED = 'Sans titre'
 // Chemin d'image TMDB attendu, ex. « /abc123.jpg ». Toute autre valeur est rejetée
 // pour éviter d'injecter une URL arbitraire dans les balises <img>.
 const IMAGE_PATH = /^\/[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp)$/i
@@ -90,7 +90,7 @@ function summary(
   date: string | null | undefined,
 ): MediaSummary {
   // Repli : titre localisé, sinon titre original, sinon « Sans titre ».
-  const cleanTitle = cleanText(title) ?? cleanText(originalTitle) ?? UNTITLED
+  const cleanTitle = cleanText(title) ?? cleanText(originalTitle) ?? t('media.untitled')
   const cleanOriginal = cleanText(originalTitle)
 
   return {

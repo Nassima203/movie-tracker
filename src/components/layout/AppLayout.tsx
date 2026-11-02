@@ -6,6 +6,7 @@
 import { NavLink, Outlet, useMatch } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { SearchCombobox } from '@/features/search/components/SearchCombobox'
+import { LanguageToggle } from '@/features/i18n/LanguageToggle'
 import { ThemeToggle } from '@/features/theme/ThemeToggle'
 import { cn } from '@/lib/cn'
 import { isDemoMode } from '@/lib/env'
@@ -13,6 +14,7 @@ import { AppBackdrop } from './AppBackdrop'
 import { Logo } from './Logo'
 import { NAV_ITEMS } from './navItems'
 import { UserMenu } from './UserMenu'
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Gabarit de l'application. La page courante est affichée à la place de
@@ -31,7 +33,7 @@ export function AppLayout() {
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-fg"
       >
-        Aller au contenu
+        {t('nav.skipToContent')}
       </a>
 
       <header className="sticky top-0 z-30 border-b border-border bg-surface-overlay backdrop-blur-xl">
@@ -39,11 +41,11 @@ export function AppLayout() {
           <Logo />
           {isDemoMode && (
             <Badge tone="accent" className="hidden sm:inline-flex">
-              Démo
+              {t('nav.demo')}
             </Badge>
           )}
 
-          <nav aria-label="Navigation principale" className="ml-4 hidden md:block">
+          <nav aria-label={t('nav.main')} className="ml-4 hidden md:block">
             <ul className="flex items-center gap-1">
               {NAV_ITEMS.filter((item) => !item.mobileOnly).map((item) => (
                 <li key={item.to}>
@@ -59,7 +61,7 @@ export function AppLayout() {
                       )
                     }
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </NavLink>
                 </li>
               ))}
@@ -73,6 +75,8 @@ export function AppLayout() {
           )}
 
           <div className={cn('ml-auto flex items-center gap-1', !isHome && 'md:ml-0')}>
+            <LanguageToggle />
+            <LanguageToggle />
             <ThemeToggle />
             <UserMenu />
           </div>
@@ -88,11 +92,11 @@ export function AppLayout() {
       {/* Navigation mobile en bas de l'écran ; le padding `safe-area-inset-bottom`
           évite la barre système des iPhone récents. */}
       <nav
-        aria-label="Navigation principale"
+        aria-label={t('nav.main')}
         className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-overlay pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
       >
         <ul className="grid grid-cols-5">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
             <li key={to}>
               <NavLink
                 to={to}
@@ -105,7 +109,7 @@ export function AppLayout() {
                 }
               >
                 <Icon aria-hidden="true" className="size-5" />
-                {label}
+                {t(labelKey)}
               </NavLink>
             </li>
           ))}

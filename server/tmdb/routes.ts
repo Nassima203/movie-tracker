@@ -5,7 +5,9 @@
  * Tout le reste est refusé : on ne veut pas d'un relais ouvert vers toute l'API
  * TMDB (ce qui permettrait à quelqu'un d'utiliser notre token pour autre chose).
  */
-const TMDB_LANGUAGE = 'fr-FR'
+// Langues acceptées pour les textes TMDB ; le français par défaut.
+const TMDB_LANGUAGES = ['fr-FR', 'en-US']
+const DEFAULT_LANGUAGE = 'fr-FR'
 
 // Limites de validation des paramètres reçus du navigateur.
 const MAX_QUERY_LENGTH = 100
@@ -37,17 +39,20 @@ function invalid(message: string): RouteResult {
   return { ok: false, message }
 }
 
-/** Fiche détaillée (film, série, saison) : même langue et même durée de cache. */
-function details(path: string): RouteResult {
+/** Fiche détaillée (film, série, saison) : même durée de cache pour toutes. */
+function details(path: string, language: string): RouteResult {
   return {
     ok: true,
-    upstream: { path, params: { language: TMDB_LANGUAGE }, maxAge: DETAILS_MAX_AGE },
+    upstream: { path, params: { language }, maxAge: DETAILS_MAX_AGE },
   }
 }
 
 /** Transforme les paramètres de l'URL (`?resource=…`) en requête TMDB, ou en erreur. */
 export function resolveTmdbRoute(searchParams: URLSearchParams): RouteResult {
   const resource = searchParams.get('resource')
+  // Toute autre valeur que fr-FR ou en-US est ignorée : on garde le français.
+  const requested = searchParams.get('language') ?? ''
+  const language = TMDB_LANGUAGES.includes(requested) ? requested : DEFAULT_LANGUAGE
 
   switch (resource) {
     // Recherche films + séries (TMDB renvoie aussi des personnes, filtrées côté navigateur).
@@ -66,7 +71,7 @@ export function resolveTmdbRoute(searchParams: URLSearchParams): RouteResult {
         upstream: {
           path: '/3/search/multi',
           // `include_adult` est imposé ici : le navigateur ne peut pas le changer.
-          params: { query, page: String(page), include_adult: 'false', language: TMDB_LANGUAGE },
+          params: { query, page: String(page), include_adult: 'false', language },
           maxAge: SEARCH_MAX_AGE,
         },
       }
@@ -74,14 +79,14 @@ export function resolveTmdbRoute(searchParams: URLSearchParams): RouteResult {
 
     // Films et séries tendance de la semaine (page d'accueil).
     case 'trending':
-      return details('/3/trending/all/week')
+      return details('/3/trending/all/week', language)
 
     // Fiche d'un film ou d'une série.
     case 'movie':
     case 'tv': {
       const id = parseIntegerInRange(searchParams.get('id'), 1, MAX_TMDB_ID)
       if (id === null) return invalid('id must be a positive integer')
-      return details(`/3/${resource}/${String(id)}`)
+      return details(`/3/${resource}/${String(id)}`, language)
     }
 
     // Détail d'une saison (la saison 0 = épisodes spéciaux, d'où le minimum à 0).
@@ -92,7 +97,7 @@ export function resolveTmdbRoute(searchParams: URLSearchParams): RouteResult {
       const season = parseIntegerInRange(searchParams.get('season'), 0, MAX_SEASON_NUMBER)
       if (season === null) return invalid('season must be a non-negative integer')
 
-      return details(`/3/tv/${String(id)}/season/${String(season)}`)
+      return details(`/3/tv/${String(id)}/season/${String(season)}`, language)
     }
 
     default:

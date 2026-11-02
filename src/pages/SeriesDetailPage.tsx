@@ -18,6 +18,7 @@ import { getUserMessage } from '@/lib/errors'
 import { pluralize } from '@/lib/format'
 import { parseTmdbIdParam } from './params'
 import { NotFoundPage } from './NotFoundPage'
+import { t } from '@/features/i18n/i18n'
 
 /** Valide l'id de l'URL : page introuvable s'il est invalide, sinon le détail de la série. */
 export function SeriesDetailPage() {
@@ -36,7 +37,7 @@ function SeriesDetail({ tmdbId }: { tmdbId: number }) {
   if (series.isError) {
     return (
       <ErrorState
-        message={getUserMessage(series.error, 'Impossible de charger cette série.')}
+        message={getUserMessage(series.error, t('detail.seriesError'))}
         onRetry={() => void series.refetch()}
       />
     )
@@ -51,8 +52,8 @@ function SeriesDetail({ tmdbId }: { tmdbId: number }) {
       <DetailHero
         media={series.data}
         meta={[
-          airedCount > 0 ? pluralize(airedCount, 'saison', 'saisons') : null,
-          series.data.inProduction ? 'En production' : null,
+          airedCount > 0 ? pluralize(airedCount, t('media.season'), t('media.seasons')) : null,
+          series.data.inProduction ? t('media.inProduction') : null,
         ]}
       >
         <MediaActionsBar media={series.data} item={item} />

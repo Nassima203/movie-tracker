@@ -14,6 +14,7 @@ import { useFilterParam } from '@/features/library/hooks/useFilterParam'
 import { useLibrary } from '@/features/library/hooks/useLibrary'
 import { filterLibrary } from '@/features/library/selectors'
 import { getUserMessage } from '@/lib/errors'
+import { t } from '@/features/i18n/i18n'
 
 // Valeurs autorisées pour le filtre de type (toute autre valeur d'URL est ignorée).
 const TYPES = ['all', 'movie', 'tv'] as const
@@ -26,14 +27,14 @@ export function WatchlistPage() {
 
   return (
     <>
-      <PageHeader title="À voir" subtitle="Les films et séries que vous voulez regarder.">
+      <PageHeader title={t('watchlist.title')} subtitle={t('watchlist.subtitle')}>
         <TypeFilter value={type} onChange={setType} />
       </PageHeader>
 
       {library.isPending && <MediaGridSkeleton />}
       {library.isError && (
         <ErrorState
-          message={getUserMessage(library.error, 'Impossible de charger votre liste.')}
+          message={getUserMessage(library.error, t('watchlist.loadError'))}
           onRetry={() => void library.refetch()}
         />
       )}
@@ -43,8 +44,8 @@ export function WatchlistPage() {
         ) : (
           <EmptyState
             icon={Bookmark}
-            title="Votre liste est vide"
-            description="Utilisez « À voir » depuis la recherche pour garder un titre de côté."
+            title={t('watchlist.emptyTitle')}
+            description={t('watchlist.emptyText')}
           />
         ))}
     </>

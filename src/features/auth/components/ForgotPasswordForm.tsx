@@ -13,6 +13,7 @@ import { requestPasswordReset } from '../authService'
 import { validateEmail } from '../validation'
 import { Field } from './formFields'
 import { inputClass } from './formStyles'
+import { t } from '@/features/i18n/i18n'
 
 // Propriétés reçues du panneau de connexion parent.
 interface ForgotPasswordFormProps {
@@ -64,10 +65,8 @@ export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPassw
   return (
     <div className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <h3 className="text-base font-semibold">Mot de passe oublié</h3>
-        <p className="text-sm text-fg-muted">
-          Saisissez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe.
-        </p>
+        <h3 className="text-base font-semibold">{t('auth.forgotTitle')}</h3>
+        <p className="text-sm text-fg-muted">{t('auth.forgotText')}</p>
       </div>
 
       <form
@@ -75,7 +74,7 @@ export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPassw
         onSubmit={(event) => void handleSubmit(event)}
         className="flex flex-col gap-4"
       >
-        <Field id={`${id}-email`} label="Adresse email" error={fieldError}>
+        <Field id={`${id}-email`} label={t('auth.email')} error={fieldError}>
           <input
             id={`${id}-email`}
             type="email"
@@ -100,7 +99,7 @@ export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPassw
 
         <Button type="submit" disabled={isPending} aria-busy={isPending} className="w-full">
           {isPending && <Spinner className="size-4" />}
-          Envoyer le lien
+          {t('auth.sendLink')}
         </Button>
       </form>
 
@@ -110,7 +109,7 @@ export function ForgotPasswordForm({ initialEmail, onBack, onSent }: ForgotPassw
         className="inline-flex items-center justify-center gap-1.5 self-center rounded text-sm text-fg-muted hover:text-fg"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
-        Retour à la connexion
+        {t('auth.backToLogin')}
       </button>
     </div>
   )

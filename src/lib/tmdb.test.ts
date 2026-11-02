@@ -21,7 +21,7 @@ describe('fetchFromTmdbProxy', () => {
     })
 
     const [url, init] = fetchMock.mock.calls[0] ?? []
-    expect(url).toBe('/api/tmdb?resource=season&id=1396&season=2')
+    expect(url).toBe('/api/tmdb?resource=season&id=1396&season=2&language=fr-FR')
     expect(new Headers(init?.headers).get('authorization')).toBe('Bearer user-jwt')
   })
 

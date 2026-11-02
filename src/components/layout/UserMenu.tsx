@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react'
 import { Spinner } from '@/components/ui/Spinner'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useSignOut } from '@/features/auth/hooks/useSignOut'
+import { t } from '@/features/i18n/i18n'
 
 export function UserMenu() {
   const auth = useAuth()
@@ -27,8 +28,8 @@ export function UserMenu() {
         type="button"
         onClick={() => void signOut()}
         disabled={isPending}
-        aria-label="Se déconnecter"
-        title="Se déconnecter"
+        aria-label={t('user.signOut')}
+        title={t('user.signOut')}
         className="inline-flex size-10 items-center justify-center rounded-full text-fg-muted transition hover:bg-surface-raised hover:text-fg disabled:opacity-60"
       >
         {isPending ? <Spinner /> : <LogOut aria-hidden="true" className="size-5" />}

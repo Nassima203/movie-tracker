@@ -6,6 +6,7 @@
  * encodée dans l'adresse. La page de connexion utilise ce module pour afficher
  * un message compréhensible.
  */
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Lit une erreur d'authentification renvoyée par Supabase Auth dans une URL de
@@ -36,13 +37,13 @@ export function getAuthRedirectErrorMessage(
   }
 
   if (code === 'otp_expired') {
-    return 'Ce lien a expiré ou a déjà été utilisé. Connectez-vous avec votre mot de passe.'
+    return t('authError.redirectExpired')
   }
 
   if (error === 'access_denied') {
-    return 'Connexion annulée ou accès refusé.'
+    return t('authError.redirectDenied')
   }
 
   // Cas inconnu : message générique plutôt que le texte du fournisseur.
-  return 'La connexion a échoué. Veuillez réessayer.'
+  return t('authError.unknown')
 }

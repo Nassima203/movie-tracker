@@ -6,6 +6,7 @@
  * requête, ajoute le jeton de session et transforme chaque échec en une
  * `TmdbProxyError` typée, facile à traduire en message utilisateur.
  */
+import { getLanguage } from '@/features/i18n/i18n'
 import { supabase } from '@/lib/supabase'
 
 /** Requêtes acceptées par le proxy `/api/tmdb` (voir server/tmdb/routes.ts). */
@@ -67,6 +68,8 @@ function toSearchParams(request: TmdbProxyRequest): URLSearchParams {
       break
   }
 
+  // Titres et résumés renvoyés par TMDB dans la langue choisie sur le site.
+  params.set('language', getLanguage() === 'en' ? 'en-US' : 'fr-FR')
   return params
 }
 

@@ -14,6 +14,7 @@ import { useFilterParam } from '@/features/library/hooks/useFilterParam'
 import { useLibrary } from '@/features/library/hooks/useLibrary'
 import { filterLibrary } from '@/features/library/selectors'
 import { getUserMessage } from '@/lib/errors'
+import { t } from '@/features/i18n/i18n'
 
 // Valeurs autorisées pour le filtre de type (toute autre valeur d'URL est ignorée).
 const TYPES = ['all', 'movie', 'tv'] as const
@@ -26,17 +27,14 @@ export function InProgressPage() {
 
   return (
     <>
-      <PageHeader
-        title="En cours"
-        subtitle="Les films et séries que vous êtes en train de regarder."
-      >
+      <PageHeader title={t('inProgress.title')} subtitle={t('inProgress.subtitle')}>
         <TypeFilter value={type} onChange={setType} />
       </PageHeader>
 
       {library.isPending && <MediaGridSkeleton />}
       {library.isError && (
         <ErrorState
-          message={getUserMessage(library.error, 'Impossible de charger vos titres en cours.')}
+          message={getUserMessage(library.error, t('inProgress.loadError'))}
           onRetry={() => void library.refetch()}
         />
       )}
@@ -46,8 +44,8 @@ export function InProgressPage() {
         ) : (
           <EmptyState
             icon={Play}
-            title="Rien en cours"
-            description="Utilisez « En cours » depuis la recherche, ou cochez une saison d’une série."
+            title={t('inProgress.emptyTitle')}
+            description={t('inProgress.emptyText')}
           />
         ))}
     </>

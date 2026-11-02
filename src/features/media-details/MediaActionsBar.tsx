@@ -6,6 +6,7 @@ import { ActionButton } from '@/features/library/components/ActionButton'
 import { RemoveButton } from '@/features/library/components/RemoveButton'
 import { useMediaActions } from '@/features/library/hooks/useMediaActions'
 import type { LibraryItem, MediaSummary } from '@/types/media'
+import { t } from '@/features/i18n/i18n'
 
 /** Affiche les actions de bibliothèque d'un film ou d'une série. */
 export function MediaActionsBar({
@@ -37,7 +38,7 @@ export function MediaActionsBar({
         // Pour une série, on précise que l'action coche toutes les saisons diffusées.
         label={
           media.mediaType === 'tv' && actions.watched.state === 'idle'
-            ? 'Tout marquer vu'
+            ? t('actions.markAllWatched')
             : actions.watched.label
         }
         onRun={actions.watched.run}

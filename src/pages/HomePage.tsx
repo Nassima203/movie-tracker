@@ -14,7 +14,9 @@ import { indexLibrary, useLibrary } from '@/features/library/hooks/useLibrary'
 import { byRecentWatch, filterLibrary } from '@/features/library/selectors'
 import { SearchCombobox } from '@/features/search/components/SearchCombobox'
 import { getUserMessage } from '@/lib/errors'
+import { pluralize } from '@/lib/format'
 import type { LibraryItem } from '@/types/media'
+import { t } from '@/features/i18n/i18n'
 
 // Nombre maximum de titres affichés par section de la bibliothèque.
 const SECTION_SIZE = 6
@@ -40,7 +42,7 @@ function SectionHeading({ title, to }: { title: string; to?: string }) {
           to={to}
           className="inline-flex items-center gap-1 rounded text-sm text-fg-muted hover:text-accent"
         >
-          Tout voir <ArrowRight aria-hidden="true" className="size-4" />
+          {t('home.seeAll')} <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
       )}
     </div>
@@ -53,12 +55,12 @@ function TrendingSection({ library }: { library: Map<string, LibraryItem> }) {
   const trending = useTrending()
 
   return (
-    <section aria-label="Tendances de la semaine" className="flex flex-col gap-4">
-      <SectionHeading title="Tendances de la semaine" />
+    <section aria-label={t('home.trending')} className="flex flex-col gap-4">
+      <SectionHeading title={t('home.trending')} />
       {trending.isPending && <MediaGridSkeleton count={12} />}
       {trending.isError && (
         <ErrorState
-          message={getUserMessage(trending.error, 'Impossible de charger les tendances.')}
+          message={getUserMessage(trending.error, t('home.trendingError'))}
           onRetry={() => void trending.refetch()}
         />
       )}
@@ -80,17 +82,18 @@ export function HomePage() {
     <>
       <section className="mb-12 flex flex-col gap-5 pt-4 sm:pt-10">
         <h1 className="text-3xl font-bold tracking-tight text-balance sm:text-5xl">
-          Ce que vous avez vu,
+          {t('home.titleLine1')}
           <br />
-          <span className="text-accent">ce que vous voulez voir.</span>
+          <span className="text-accent">{t('home.titleLine2')}</span>
         </h1>
         <div className="max-w-2xl">
           <SearchCombobox variant="popover" size="lg" />
         </div>
         {library.isSuccess && items.length > 0 && (
           <p className="text-sm text-fg-muted">
-            {inProgress.length} en cours · {watchlist.length} à voir · {watched.length} vu
-            {watched.length > 1 ? 's' : ''}
+            {t('home.inProgressCount', { count: inProgress.length })} ·{' '}
+            {t('home.toWatchCount', { count: watchlist.length })} ·{' '}
+            {pluralize(watched.length, t('home.watchedOne'), t('home.watchedMany'))}
           </p>
         )}
       </section>
@@ -98,17 +101,21 @@ export function HomePage() {
       {library.isError && (
         <div className="mb-12">
           <ErrorState
-            message={getUserMessage(library.error, 'Impossible de charger votre bibliothèque.')}
+            message={getUserMessage(library.error, t('library.loadError'))}
             onRetry={() => void library.refetch()}
           />
         </div>
       )}
 
       <div className="flex flex-col gap-12">
-        <LibrarySection title="En cours" to="/in-progress" items={inProgress} />
-        <LibrarySection title="À voir" to="/watchlist" items={watchlist} />
+        <LibrarySection title={t('home.inProgress')} to="/in-progress" items={inProgress} />
+        <LibrarySection title={t('home.toWatch')} to="/watchlist" items={watchlist} />
         <TrendingSection library={indexLibrary(library.data)} />
-        <LibrarySection title="Vus récemment" to="/library?status=watched" items={watched} />
+        <LibrarySection
+          title={t('home.recentlyWatched')}
+          to="/library?status=watched"
+          items={watched}
+        />
       </div>
     </>
   )

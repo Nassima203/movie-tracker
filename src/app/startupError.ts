@@ -2,6 +2,7 @@
  * Écran de secours affiché quand l'application ne peut pas démarrer
  * (ex. configuration invalide), au lieu d'une page blanche.
  */
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Remplace le contenu de `container` par un message d'erreur lisible.
@@ -17,11 +18,11 @@ export function renderStartupError(container: HTMLElement, error: unknown): void
     'min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;font-family:system-ui,sans-serif;background:#07070b;color:#f4f4f6'
 
   const title = document.createElement('h1')
-  title.textContent = 'uwatch ne peut pas démarrer'
+  title.textContent = t('startup.title')
   title.style.cssText = 'font-size:1.5rem;margin:0'
 
   const message = document.createElement('p')
-  message.textContent = 'Vérifiez la configuration puis rechargez la page.'
+  message.textContent = t('startup.text')
   message.style.cssText = 'margin:0;color:#a3a3b0'
 
   const technical = document.createElement('pre')

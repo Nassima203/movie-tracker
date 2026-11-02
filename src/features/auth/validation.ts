@@ -5,6 +5,7 @@
  * formé, mot de passe trop court…). Elles ne remplacent pas les contrôles du
  * serveur : Supabase applique de son côté les vraies règles.
  */
+import { t } from '@/features/i18n/i18n'
 
 // Longueur minimale d'un nouveau mot de passe.
 const MIN_PASSWORD_LENGTH = 8
@@ -24,7 +25,7 @@ export type AuthFormErrors = Partial<Record<keyof AuthFormValues, string>>
 
 /** Renvoie un message d'erreur si l'email est mal formé, sinon `undefined`. */
 export function validateEmail(email: string): string | undefined {
-  return EMAIL_PATTERN.test(email.trim()) ? undefined : 'Saisissez une adresse email valide.'
+  return EMAIL_PATTERN.test(email.trim()) ? undefined : t('validation.email')
 }
 
 /** Critères d'un nouveau mot de passe, vérifiés un par un (affichés en direct). */
@@ -52,14 +53,14 @@ export function validateNewPassword(
   const rules = checkPasswordRules(password)
 
   if (!rules.minLength) {
-    errors.password = `Au moins ${String(MIN_PASSWORD_LENGTH)} caractères.`
+    errors.password = t('validation.minLength', { min: MIN_PASSWORD_LENGTH })
   } else if (!rules.hasLetter || !rules.hasDigit) {
     // Exige au moins une lettre et au moins un chiffre.
-    errors.password = 'Utilisez au moins une lettre et un chiffre.'
+    errors.password = t('validation.letterAndDigit')
   }
 
   if (confirmPassword !== password) {
-    errors.confirmPassword = 'Les deux mots de passe ne correspondent pas.'
+    errors.confirmPassword = t('validation.mismatch')
   }
 
   return errors
@@ -77,7 +78,7 @@ export function validateAuthForm(
   // À la connexion, on vérifie seulement que le mot de passe est rempli : ses
   // règles de complexité ne concernent que la création d'un mot de passe.
   if (mode === 'sign-in') {
-    if (values.password.length === 0) errors.password = 'Saisissez votre mot de passe.'
+    if (values.password.length === 0) errors.password = t('validation.passwordRequired')
     return errors
   }
 

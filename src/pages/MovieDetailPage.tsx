@@ -15,6 +15,7 @@ import { getUserMessage } from '@/lib/errors'
 import { formatRuntime } from '@/lib/format'
 import { parseTmdbIdParam } from './params'
 import { NotFoundPage } from './NotFoundPage'
+import { t } from '@/features/i18n/i18n'
 
 /** Valide l'id de l'URL : page introuvable s'il est invalide, sinon le détail du film. */
 export function MovieDetailPage() {
@@ -31,7 +32,7 @@ function MovieDetail({ tmdbId }: { tmdbId: number }) {
   if (movie.isError) {
     return (
       <ErrorState
-        message={getUserMessage(movie.error, 'Impossible de charger ce film.')}
+        message={getUserMessage(movie.error, t('detail.movieError'))}
         onRetry={() => void movie.refetch()}
       />
     )

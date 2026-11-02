@@ -3,6 +3,7 @@
  * des blocs gris animés à la place de l'affiche et du texte en attendant TMDB.
  */
 import { Skeleton } from '@/components/ui/Skeleton'
+import { t } from '@/features/i18n/i18n'
 
 /** Affiché pendant le chargement des détails, avec la même mise en page que `DetailHero`. */
 export function DetailSkeleton() {
@@ -11,7 +12,7 @@ export function DetailSkeleton() {
     // aux lecteurs d'écran (les blocs gris, eux, sont masqués).
     <div
       role="status"
-      aria-label="Chargement"
+      aria-label={t('common.loading')}
       className="flex flex-col gap-6 pt-6 sm:flex-row sm:items-end"
     >
       <Skeleton className="aspect-[2/3] w-40 sm:w-56" />

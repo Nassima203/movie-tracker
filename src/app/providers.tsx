@@ -8,6 +8,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { ToastProvider } from '@/components/ui/toast/ToastProvider'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { LanguageProvider } from '@/features/i18n/LanguageProvider'
 import { ThemeProvider } from '@/features/theme/ThemeProvider'
 import { createQueryClient } from './queryClient'
 
@@ -30,7 +31,7 @@ function ClearCacheOnSignOut() {
 
 /**
  * Enveloppe l'application dans tous ses fournisseurs globaux :
- * thème → cache React Query → authentification → notifications (toasts).
+ * thème → cache React Query → authentification → notifications (toasts) → langue.
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   // `useState` avec une fonction d'initialisation : le client n'est créé qu'une
@@ -43,7 +44,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
         {/* L'authentification est sous React Query pour que ClearCacheOnSignOut accède aux deux. */}
         <AuthProvider>
           <ClearCacheOnSignOut />
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <LanguageProvider>{children}</LanguageProvider>
+          </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

@@ -6,6 +6,7 @@
 import type { LibraryItem, MediaSummary } from '@/types/media'
 import { categorize } from '../progress'
 import { useAddToWatchlist, useMarkWatched, useMarkWatching } from './useLibraryActions'
+import { t } from '@/features/i18n/i18n'
 
 /**
  * État d'un bouton d'action : `idle` (cliquable), `loading` (requête en cours),
@@ -56,9 +57,9 @@ export function useMediaActions(media: MediaSummary, item: LibraryItem | null): 
       state: stateOf(addToWatchlist.isPending, inLibrary),
       label: inLibrary
         ? category === 'watchlist'
-          ? 'Dans ma liste'
-          : 'Dans la bibliothèque'
-        : 'À voir',
+          ? t('actions.inMyList')
+          : t('actions.inLibrary')
+        : t('actions.toWatch'),
       run: () => {
         if (!inLibrary && !busy) addToWatchlist.mutate(media)
       },
@@ -66,14 +67,14 @@ export function useMediaActions(media: MediaSummary, item: LibraryItem | null): 
     watching: {
       // Un titre terminé n'est pas ramené automatiquement à « en cours ».
       state: stateOf(markWatching.isPending, isWatching || isWatched),
-      label: 'En cours',
+      label: t('actions.watching'),
       run: () => {
         if (!isWatching && !isWatched && !busy) markWatching.mutate(media)
       },
     },
     watched: {
       state: stateOf(markWatched.isPending, isWatched),
-      label: isWatched ? 'Vu' : 'Marquer vu',
+      label: isWatched ? t('actions.watched') : t('actions.markWatched'),
       run: () => {
         if (!isWatched && !busy) markWatched.mutate(media)
       },

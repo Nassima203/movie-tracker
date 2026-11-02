@@ -23,6 +23,7 @@ import {
 import { ForgotPasswordForm } from './ForgotPasswordForm'
 import { Field, Notice } from './formFields'
 import { inputClass } from './formStyles'
+import { t } from '@/features/i18n/i18n'
 
 // Onglet actif : connexion ou création de compte.
 type Mode = 'sign-in' | 'sign-up'
@@ -132,13 +133,13 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
     <div className="flex w-full flex-col gap-5">
       <div
         role="group"
-        aria-label="Choisir une action"
+        aria-label={t('auth.chooseAction')}
         className="grid grid-cols-2 gap-1 rounded-xl bg-fg/6 p-1"
       >
         {(
           [
-            ['sign-in', 'Connexion'],
-            ['sign-up', 'Créer un compte'],
+            ['sign-in', t('auth.signInTab')],
+            ['sign-up', t('auth.signUpTab')],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -165,15 +166,15 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
             <MailCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success" />
             {notice.kind === 'sign-up' ? (
               <p>
-                Compte créé. Un email de confirmation a été envoyé à{' '}
-                <strong className="font-semibold break-all">{notice.email}</strong>. Cliquez sur le
-                lien qu’il contient, puis connectez-vous ici.
+                {t('auth.signUpNoticeBefore')}
+                <strong className="font-semibold break-all">{notice.email}</strong>
+                {t('auth.signUpNoticeAfter')}
               </p>
             ) : (
               <p>
-                Si un compte existe pour{' '}
-                <strong className="font-semibold break-all">{notice.email}</strong>, un email vient
-                d’être envoyé. Ouvrez le lien qu’il contient pour choisir un nouveau mot de passe.
+                {t('auth.resetNoticeBefore')}
+                <strong className="font-semibold break-all">{notice.email}</strong>
+                {t('auth.resetNoticeAfter')}
               </p>
             )}
           </div>
@@ -185,7 +186,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
         onSubmit={(event) => void handleSubmit(event)}
         className="flex flex-col gap-4"
       >
-        <Field id={`${id}-email`} label="Adresse email" error={fieldErrors.email}>
+        <Field id={`${id}-email`} label={t('auth.email')} error={fieldErrors.email}>
           <input
             id={`${id}-email`}
             type="email"
@@ -201,7 +202,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
           />
         </Field>
 
-        <Field id={`${id}-password`} label="Mot de passe" error={fieldErrors.password}>
+        <Field id={`${id}-password`} label={t('auth.password')} error={fieldErrors.password}>
           <div className="relative">
             <input
               id={`${id}-password`}
@@ -220,7 +221,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
               onClick={() => {
                 setShowPassword((current) => !current)
               }}
-              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               aria-pressed={showPassword}
               className="absolute inset-y-0 right-1 my-auto inline-flex size-10 items-center justify-center rounded-lg text-fg-muted hover:text-fg"
             >
@@ -242,14 +243,14 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
             }}
             className="-mt-2 self-end rounded text-sm text-fg-muted underline-offset-4 hover:text-accent hover:underline"
           >
-            Mot de passe oublié ?
+            {t('auth.forgotLink')}
           </button>
         )}
 
         {isSignUp && (
           <Field
             id={`${id}-confirm`}
-            label="Confirmer le mot de passe"
+            label={t('auth.confirmPassword')}
             error={fieldErrors.confirmPassword}
           >
             <input
@@ -275,7 +276,7 @@ export function LoginPanel({ redirectTo, initialError }: LoginPanelProps) {
 
         <Button type="submit" disabled={isPending} aria-busy={isPending} className="mt-1 w-full">
           {isPending && <Spinner className="size-4" />}
-          {isSignUp ? 'Créer mon compte' : 'Se connecter'}
+          {isSignUp ? t('auth.signUpButton') : t('auth.signInButton')}
         </Button>
       </form>
     </div>

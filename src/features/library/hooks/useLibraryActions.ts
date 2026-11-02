@@ -20,6 +20,7 @@ import type {
 import { airedRegularSeasons } from '../progress'
 import { libraryRepository } from '../repository'
 import { libraryQueryKey, useLibraryUserId } from './useLibrary'
+import { t } from '@/features/i18n/i18n'
 
 /** Fonction qui calcule la nouvelle liste (en cache) à partir de l'ancienne. */
 type Updater = (items: LibraryItem[]) => LibraryItem[]
@@ -134,7 +135,7 @@ export function useAddToWatchlist() {
       libraryRepository.upsert({ ...toSummary(media), status: 'watchlist' }),
     optimistic: (media) => (items) =>
       upsertLocal(items, { ...toSummary(media), status: 'watchlist', watchedAt: null }),
-    errorMessage: 'Impossible d’ajouter ce titre à votre liste.',
+    errorMessage: t('library.addError'),
   })
 }
 
@@ -145,7 +146,7 @@ export function useMarkWatching() {
       libraryRepository.upsert({ ...toSummary(media), status: 'watching' }),
     optimistic: (media) => (items) =>
       upsertLocal(items, { ...toSummary(media), status: 'watching', watchedAt: null }),
-    errorMessage: 'Impossible de marquer ce titre comme en cours.',
+    errorMessage: t('library.watchingError'),
   })
 }
 
@@ -192,7 +193,7 @@ export function useMarkWatched() {
         status: 'watched',
         watchedAt: new Date().toISOString(),
       }),
-    errorMessage: 'Impossible de marquer ce titre comme vu.',
+    errorMessage: t('library.watchedError'),
   })
 }
 
@@ -201,7 +202,7 @@ export function useRemoveFromLibrary() {
   return useOptimisticLibraryMutation({
     mutationFn: (ref: MediaRef) => libraryRepository.remove(ref),
     optimistic: (ref) => (items) => items.filter((item) => !sameMedia(item, ref)),
-    errorMessage: 'Impossible de retirer ce titre.',
+    errorMessage: t('library.removeError'),
   })
 }
 
@@ -258,6 +259,6 @@ export function useSetSeasonsWatched() {
           watchedSeasons: [...seasons].sort((a, b) => a - b),
         })
       },
-    errorMessage: 'Impossible de mettre à jour les saisons.',
+    errorMessage: t('library.seasonsError'),
   })
 }

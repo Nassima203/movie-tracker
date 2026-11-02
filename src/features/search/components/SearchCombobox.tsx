@@ -15,9 +15,11 @@ import { Spinner } from '@/components/ui/Spinner'
 import { indexLibrary, useLibrary } from '@/features/library/hooks/useLibrary'
 import { cn } from '@/lib/cn'
 import { getUserMessage } from '@/lib/errors'
+import { pluralize } from '@/lib/format'
 import { mediaKey, type MediaSummary } from '@/types/media'
 import { useTmdbSearch, type TmdbSearchState } from '../hooks/useTmdbSearch'
 import { SEARCH_COLUMNS, SearchResultRow } from './SearchResultRow'
+import { t } from '@/features/i18n/i18n'
 
 interface SearchComboboxProps {
   /** `popover` : menu déroulant de l'en-tête. `inline` : page de recherche, résultats toujours visibles. */
@@ -42,13 +44,13 @@ interface ActiveCell {
 function announce(search: TmdbSearchState): string {
   switch (search.status) {
     case 'loading':
-      return 'Recherche en cours'
+      return t('search.loading')
     case 'empty':
-      return 'Aucun résultat'
+      return t('search.noResults')
     case 'error':
-      return 'La recherche a échoué'
+      return t('search.failed')
     case 'success':
-      return `${String(search.results.length)} résultat${search.results.length > 1 ? 's' : ''}`
+      return pluralize(search.results.length, t('search.result'), t('search.results'))
     case 'idle':
       return ''
   }
@@ -188,7 +190,7 @@ export function SearchCombobox({
           ref={inputRef}
           type="search"
           role="combobox"
-          aria-label="Rechercher un film ou une série"
+          aria-label={t('search.placeholder')}
           aria-expanded={showPopup}
           aria-controls={gridId}
           aria-haspopup="grid"
@@ -199,7 +201,7 @@ export function SearchCombobox({
           spellCheck={false}
           enterKeyHint="search"
           autoFocus={autoFocus}
-          placeholder="Rechercher un film ou une série"
+          placeholder={t('search.placeholder')}
           value={input}
           onChange={(event) => {
             setInput(event.target.value)
@@ -219,7 +221,7 @@ export function SearchCombobox({
         {input && (
           <button
             type="button"
-            aria-label="Effacer la recherche"
+            aria-label={t('search.clear')}
             onClick={() => {
               setInput('')
               setActive(null)
@@ -253,13 +255,13 @@ export function SearchCombobox({
           {search.status === 'error' && (
             <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-sm">
               <CircleAlert aria-hidden="true" className="size-6 text-danger" />
-              <p>{getUserMessage(search.error, 'La recherche a échoué.')}</p>
+              <p>{getUserMessage(search.error, t('search.failedSentence'))}</p>
               <button
                 type="button"
                 onClick={search.retry}
                 className="rounded-full bg-fg/10 px-4 py-2 font-medium hover:bg-fg/15"
               >
-                Réessayer
+                {t('common.retry')}
               </button>
             </div>
           )}
@@ -268,7 +270,9 @@ export function SearchCombobox({
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-sm text-fg-muted">
               <SearchX aria-hidden="true" className="size-6" />
               <p>
-                Aucun résultat pour « <span className="text-fg">{search.query}</span> »
+                {t('search.noResultsBefore')}
+                <span className="text-fg">{search.query}</span>
+                {t('search.noResultsAfter')}
               </p>
             </div>
           )}
@@ -276,7 +280,7 @@ export function SearchCombobox({
           <div
             id={gridId}
             role="grid"
-            aria-label="Résultats de recherche"
+            aria-label={t('search.resultsLabel')}
             aria-rowcount={results.length}
             hidden={search.status !== 'success'}
             className="flex flex-col gap-1"

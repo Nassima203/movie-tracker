@@ -4,6 +4,7 @@
  */
 import type { TypeFilter as TypeFilterValue } from '../selectors'
 import { FilterChips } from './FilterChips'
+import { t } from '@/features/i18n/i18n'
 
 /** Permet de n'afficher que les films, que les séries, ou les deux. */
 export function TypeFilter({
@@ -15,13 +16,13 @@ export function TypeFilter({
 }) {
   return (
     <FilterChips
-      label="Type"
+      label={t('filter.type')}
       value={value}
       onChange={onChange}
       options={[
-        { value: 'all', label: 'Films et séries' },
-        { value: 'movie', label: 'Films' },
-        { value: 'tv', label: 'Séries' },
+        { value: 'all', label: t('filter.allTypes') },
+        { value: 'movie', label: t('filter.movies') },
+        { value: 'tv', label: t('filter.series') },
       ]}
     />
   )

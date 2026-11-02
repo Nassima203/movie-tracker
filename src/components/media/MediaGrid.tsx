@@ -5,6 +5,7 @@
 import { Skeleton } from '@/components/ui/Skeleton'
 import { mediaKey, type LibraryItem, type MediaSummary } from '@/types/media'
 import { PosterCard } from './PosterCard'
+import { t } from '@/features/i18n/i18n'
 
 // Classes de la grille, partagées par la grille et son squelette pour qu'ils aient
 // exactement la même mise en page (pas de « saut » à la fin du chargement).
@@ -44,7 +45,7 @@ function isLibraryItem(media: MediaSummary): media is LibraryItem {
 /** Version « chargement » de la grille : des affiches grises animées. */
 export function MediaGridSkeleton({ count = 12 }: { count?: number }) {
   return (
-    <div className={GRID} role="status" aria-label="Chargement">
+    <div className={GRID} role="status" aria-label={t('common.loading')}>
       {Array.from({ length: count }, (_, index) => (
         <div key={index} className="flex flex-col gap-2">
           <Skeleton className="aspect-[2/3] w-full" />

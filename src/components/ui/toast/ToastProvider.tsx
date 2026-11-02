@@ -7,6 +7,7 @@ import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { ToastContext, type ToastApi, type ToastTone } from './ToastContext'
+import { t } from '@/features/i18n/i18n'
 
 interface Toast {
   id: number
@@ -84,7 +85,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   dismiss(toast.id)
                 }}
                 className="rounded p-1 text-fg-muted hover:text-fg"
-                aria-label="Fermer la notification"
+                aria-label={t('toast.close')}
               >
                 <X aria-hidden="true" className="size-4" />
               </button>

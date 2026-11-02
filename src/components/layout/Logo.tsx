@@ -3,6 +3,7 @@
  */
 import { Link } from 'react-router'
 import { cn } from '@/lib/cn'
+import { t } from '@/features/i18n/i18n'
 
 /** Logo cliquable menant à la page d'accueil. */
 export function Logo({ className }: { className?: string }) {
@@ -10,7 +11,7 @@ export function Logo({ className }: { className?: string }) {
     <Link
       to="/"
       // Accessibilité : le libellé précise la destination du lien, pas seulement le nom.
-      aria-label="uwatch, accueil"
+      aria-label={t('nav.logo')}
       className={cn('rounded-md text-xl font-bold tracking-tight', className)}
     >
       u<span className="text-accent">watch</span>

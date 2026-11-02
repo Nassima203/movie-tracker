@@ -14,6 +14,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getAuthRedirectErrorMessage } from '@/features/auth/authRedirectError'
 import { toSafeRedirectPath } from '@/features/auth/redirect'
 import { isDemoMode } from '@/lib/env'
+import { t } from '@/features/i18n/i18n'
 
 // Récupère la page d'origine transmise par ProtectedRoute dans l'état de
 // navigation. Cet état est vérifié avec soin car il n'est pas typé (unknown)
@@ -32,7 +33,7 @@ export function LoginPage() {
   const location = useLocation()
 
   if (auth.status === 'loading') {
-    return <FullPageLoader label="Chargement de la session…" />
+    return <FullPageLoader label={t('common.sessionLoading')} />
   }
 
   // Déjà connecté (ou vient de se connecter) : on part vers la bonne page.
@@ -43,8 +44,8 @@ export function LoginPage() {
   return (
     <AuthCard>
       <div className="flex w-full flex-col gap-1 text-center">
-        <h2 className="text-lg font-semibold">Bienvenue</h2>
-        <p className="text-sm text-fg-muted">Connectez-vous ou créez votre compte.</p>
+        <h2 className="text-lg font-semibold">{t('auth.welcome')}</h2>
+        <p className="text-sm text-fg-muted">{t('auth.welcomeText')}</p>
       </div>
 
       <LoginPanel
@@ -54,9 +55,8 @@ export function LoginPage() {
 
       {isDemoMode && (
         <p className="rounded-xl bg-accent/10 px-4 py-3 text-center text-xs text-fg ring-1 ring-accent/30">
-          <strong className="font-semibold">Mode démo</strong> : Supabase n’est pas configuré.
-          N’importe quel email et mot de passe fonctionnent, et vos données restent dans ce
-          navigateur.
+          <strong className="font-semibold">{t('auth.demoTitle')}</strong>
+          {t('auth.demoText')}
         </p>
       )}
     </AuthCard>

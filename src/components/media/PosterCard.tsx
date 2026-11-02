@@ -11,6 +11,7 @@ import { formatYear, mediaTypeLabel } from '@/lib/format'
 import type { LibraryItem, MediaSummary } from '@/types/media'
 import { mediaPath } from './mediaPath'
 import { PosterImage } from './PosterImage'
+import { t } from '@/features/i18n/i18n'
 
 // Largeur affichée de l'affiche selon l'écran : le navigateur choisit ainsi la
 // plus petite image suffisante (attribut `sizes` des images responsives).
@@ -47,13 +48,13 @@ export function PosterCard({ media, item }: PosterCardProps) {
           <span className="absolute top-2 right-2 inline-flex size-6 items-center justify-center rounded-full bg-accent text-accent-fg shadow">
             {/* Icône décorative + texte réservé aux lecteurs d'écran (sr-only). */}
             <Check aria-hidden="true" className="size-4" strokeWidth={3} />
-            <span className="sr-only">Vu</span>
+            <span className="sr-only">{t('media.watched')}</span>
           </span>
         )}
         {category === 'watchlist' && (
           <span className="absolute top-2 right-2 inline-flex size-6 items-center justify-center rounded-full bg-surface-overlay text-accent shadow ring-1 ring-border backdrop-blur-sm">
             <Bookmark aria-hidden="true" className="size-3.5" strokeWidth={2.5} />
-            <span className="sr-only">À voir</span>
+            <span className="sr-only">{t('media.toWatch')}</span>
           </span>
         )}
       </div>
@@ -66,7 +67,7 @@ export function PosterCard({ media, item }: PosterCardProps) {
           {[
             year,
             progress?.total
-              ? `${String(progress.watched)}/${String(progress.total)} saisons`
+              ? t('media.seasonsProgress', { watched: progress.watched, total: progress.total })
               : null,
           ]
             .filter(Boolean)
@@ -76,7 +77,7 @@ export function PosterCard({ media, item }: PosterCardProps) {
           <ProgressBar
             value={progress.watched}
             max={progress.total}
-            label={`Progression de ${media.title}`}
+            label={t('media.progressOf', { title: media.title })}
           />
         ) : null}
       </div>

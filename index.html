@@ -11,6 +11,7 @@
       try {
         var t = localStorage.getItem('uwatch:theme')
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+        if (localStorage.getItem('uwatch:language') === 'en') document.documentElement.lang = 'en'
       } catch (e) {}
     </script>
   </head>

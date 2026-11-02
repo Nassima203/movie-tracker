@@ -16,6 +16,7 @@ import { useFilterParam } from '@/features/library/hooks/useFilterParam'
 import { useLibrary } from '@/features/library/hooks/useLibrary'
 import { countByCategory, filterLibrary } from '@/features/library/selectors'
 import { getUserMessage } from '@/lib/errors'
+import { t } from '@/features/i18n/i18n'
 
 // Valeurs autorisées pour les filtres lus dans l'URL.
 const STATUSES = ['all', 'in_progress', 'watchlist', 'watched'] as const
@@ -33,20 +34,20 @@ export function LibraryPage() {
 
   return (
     <>
-      <PageHeader title="Bibliothèque" subtitle="Tout ce que vous suivez, au même endroit.">
+      <PageHeader title={t('library.title')} subtitle={t('library.subtitle')}>
         <TypeFilter value={type} onChange={setType} />
       </PageHeader>
 
       <div className="mb-6">
         <FilterChips
-          label="Statut"
+          label={t('filter.status')}
           value={status}
           onChange={setStatus}
           options={[
-            { value: 'all', label: 'Tout', count: all.length },
-            { value: 'in_progress', label: 'En cours', count: counts.in_progress },
-            { value: 'watchlist', label: 'À voir', count: counts.watchlist },
-            { value: 'watched', label: 'Vus', count: counts.watched },
+            { value: 'all', label: t('filter.all'), count: all.length },
+            { value: 'in_progress', label: t('filter.inProgress'), count: counts.in_progress },
+            { value: 'watchlist', label: t('filter.toWatch'), count: counts.watchlist },
+            { value: 'watched', label: t('filter.watched'), count: counts.watched },
           ]}
         />
       </div>
@@ -54,7 +55,7 @@ export function LibraryPage() {
       {library.isPending && <MediaGridSkeleton />}
       {library.isError && (
         <ErrorState
-          message={getUserMessage(library.error, 'Impossible de charger votre bibliothèque.')}
+          message={getUserMessage(library.error, t('library.loadError'))}
           onRetry={() => void library.refetch()}
         />
       )}
@@ -64,13 +65,9 @@ export function LibraryPage() {
         ) : (
           <EmptyState
             icon={Library}
-            title="Aucun titre"
+            title={t('library.emptyTitle')}
             // On distingue « bibliothèque vide » de « filtres trop restrictifs ».
-            description={
-              all.length === 0
-                ? 'Votre bibliothèque est vide.'
-                : 'Aucun titre ne correspond à ces filtres.'
-            }
+            description={all.length === 0 ? t('library.emptyText') : t('library.noMatch')}
           />
         ))}
     </>

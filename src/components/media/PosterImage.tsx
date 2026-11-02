@@ -6,6 +6,7 @@ import { Clapperboard } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
 import { posterSrcSet, posterUrl } from '@/lib/tmdbImage'
+import { t } from '@/features/i18n/i18n'
 
 interface PosterImageProps {
   path: string | null
@@ -56,7 +57,7 @@ export function PosterImage({
           src={src}
           srcSet={posterSrcSet(path)}
           sizes={sizes}
-          alt={`Affiche de ${title}`}
+          alt={t('media.posterAlt', { title })}
           // `lazy` : les affiches hors écran ne sont téléchargées qu'en s'en approchant.
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
@@ -70,7 +71,7 @@ export function PosterImage({
         // une image, avec un texte expliquant l'absence d'affiche.
         <div
           role="img"
-          aria-label={`Pas d’affiche pour ${title}`}
+          aria-label={t('media.noPoster', { title })}
           className="flex size-full flex-col items-center justify-center gap-2 p-3 text-center"
           style={{
             backgroundImage: `linear-gradient(160deg, hsl(${String(hue)} 45% 30%), hsl(${String((hue + 50) % 360)} 45% 9%))`,

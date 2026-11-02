@@ -4,6 +4,7 @@
  */
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from './useTheme'
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Bouton qui inverse le thème courant au clic.
@@ -20,8 +21,8 @@ export function ThemeToggle() {
       onClick={() => {
         setTheme(isDark ? 'light' : 'dark')
       }}
-      aria-label={isDark ? 'Activer le mode jour' : 'Activer le mode nuit'}
-      title={isDark ? 'Mode jour' : 'Mode nuit'}
+      aria-label={isDark ? t('theme.enableLight') : t('theme.enableDark')}
+      title={isDark ? t('theme.light') : t('theme.dark')}
       className="inline-flex size-10 items-center justify-center rounded-full text-fg-muted transition hover:bg-surface-raised hover:text-fg"
     >
       {isDark ? (

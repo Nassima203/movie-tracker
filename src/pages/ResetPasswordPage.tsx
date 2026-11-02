@@ -26,6 +26,7 @@ import {
 import { AuthFailure } from '@/features/auth/types'
 import { checkPasswordRules, hasErrors, validateNewPassword } from '@/features/auth/validation'
 import { cn } from '@/lib/cn'
+import { t } from '@/features/i18n/i18n'
 
 // État de la vérification du jeton présent dans l'URL.
 type LinkState =
@@ -81,7 +82,7 @@ export function ResetPasswordPage() {
     auth.status === 'loading' ||
     (link.status === 'verified' && auth.status !== 'authenticated')
   ) {
-    return <FullPageLoader label="Vérification du lien…" />
+    return <FullPageLoader label={t('reset.verifying')} />
   }
 
   // Pas de session : le lien a expiré ou n'a pas pu connecter l'utilisateur.
@@ -99,16 +100,13 @@ function ExpiredLink({ message }: { message?: string | undefined }) {
   return (
     <AuthCard>
       <div role="alert" className="flex w-full flex-col gap-4 text-center">
-        <h2 className="text-lg font-semibold">Lien invalide ou expiré</h2>
-        <p className="text-sm text-fg-muted">
-          {message ??
-            'Ce lien ne fonctionne plus. Refaites une demande depuis la page de connexion.'}
-        </p>
+        <h2 className="text-lg font-semibold">{t('reset.expiredTitle')}</h2>
+        <p className="text-sm text-fg-muted">{message ?? t('reset.expiredText')}</p>
         <Link
           to="/login"
           className="inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-medium text-accent-fg hover:brightness-110"
         >
-          Retour à la connexion
+          {t('auth.backToLogin')}
         </Link>
       </div>
     </AuthCard>
@@ -117,9 +115,9 @@ function ExpiredLink({ message }: { message?: string | undefined }) {
 
 // Critères affichés sous le premier champ, cochés au fil de la saisie.
 const RULE_LABELS = [
-  ['minLength', '8 caractères minimum'],
-  ['hasLetter', 'Au moins une lettre'],
-  ['hasDigit', 'Au moins un chiffre'],
+  ['minLength', 'reset.ruleMinLength'],
+  ['hasLetter', 'reset.ruleLetter'],
+  ['hasDigit', 'reset.ruleDigit'],
 ] as const
 
 // Formulaire de saisie (et confirmation) du nouveau mot de passe.
@@ -138,9 +136,7 @@ function NewPasswordForm() {
   const rules = checkPasswordRules(password)
   const canSubmit = !hasErrors(validateNewPassword(password, confirmPassword))
   const mismatch =
-    confirmTouched && confirmPassword !== password
-      ? 'Les deux mots de passe ne correspondent pas.'
-      : undefined
+    confirmTouched && confirmPassword !== password ? t('validation.mismatch') : undefined
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -153,7 +149,7 @@ function NewPasswordForm() {
       await updatePassword(password)
       // La réinitialisation est terminée : on oublie la demande en attente.
       clearPasswordResetRequest()
-      notify('Mot de passe modifié.', 'success')
+      notify(t('reset.success'), 'success')
       // `replace` empêche de revenir sur ce formulaire avec le bouton « Précédent ».
       void navigate('/', { replace: true })
     } catch (cause) {
@@ -177,7 +173,7 @@ function NewPasswordForm() {
       onClick={() => {
         setShowPassword((current) => !current)
       }}
-      aria-label={showPassword ? 'Masquer les mots de passe' : 'Afficher les mots de passe'}
+      aria-label={showPassword ? t('reset.hidePasswords') : t('reset.showPasswords')}
       aria-pressed={showPassword}
       aria-controls={`${id}-password ${id}-confirm`}
       className="absolute inset-y-0 right-1 my-auto inline-flex size-10 items-center justify-center rounded-lg text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
@@ -193,10 +189,8 @@ function NewPasswordForm() {
   return (
     <div className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-1 text-center">
-        <h2 className="text-lg font-semibold">Créer un nouveau mot de passe</h2>
-        <p className="text-sm text-fg-muted">
-          Choisissez un mot de passe d’au moins 8 caractères, avec des lettres et des chiffres.
-        </p>
+        <h2 className="text-lg font-semibold">{t('reset.title')}</h2>
+        <p className="text-sm text-fg-muted">{t('reset.subtitle')}</p>
       </div>
 
       <form
@@ -204,7 +198,7 @@ function NewPasswordForm() {
         onSubmit={(event) => void handleSubmit(event)}
         className="flex flex-col gap-4"
       >
-        <Field id={`${id}-password`} label="Nouveau mot de passe" error={undefined}>
+        <Field id={`${id}-password`} label={t('reset.newPassword')} error={undefined}>
           <div className="relative">
             <input
               id={`${id}-password`}
@@ -219,8 +213,8 @@ function NewPasswordForm() {
             />
             {toggle}
           </div>
-          <ul id={`${id}-rules`} aria-label="Critères du mot de passe" className="mt-1 space-y-1">
-            {RULE_LABELS.map(([rule, label]) => (
+          <ul id={`${id}-rules`} aria-label={t('reset.rules')} className="mt-1 space-y-1">
+            {RULE_LABELS.map(([rule, labelKey]) => (
               <li
                 key={rule}
                 className={cn(
@@ -229,14 +223,16 @@ function NewPasswordForm() {
                 )}
               >
                 <Check aria-hidden="true" className="size-4 shrink-0" />
-                {label}
-                <span className="sr-only">{rules[rule] ? ' : respecté' : ' : non respecté'}</span>
+                {t(labelKey)}
+                <span className="sr-only">
+                  {rules[rule] ? t('reset.ruleMet') : t('reset.ruleNotMet')}
+                </span>
               </li>
             ))}
           </ul>
         </Field>
 
-        <Field id={`${id}-confirm`} label="Confirmer le mot de passe" error={mismatch}>
+        <Field id={`${id}-confirm`} label={t('auth.confirmPassword')} error={mismatch}>
           <div className="relative">
             <input
               id={`${id}-confirm`}
@@ -268,7 +264,7 @@ function NewPasswordForm() {
           className="mt-1 w-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {isPending && <Spinner className="size-4" />}
-          Valider
+          {t('reset.submit')}
         </Button>
       </form>
 
@@ -277,7 +273,7 @@ function NewPasswordForm() {
         onClick={handleCancel}
         className="self-center rounded text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline focus-visible:outline-2 focus-visible:outline-accent"
       >
-        Annuler
+        {t('reset.cancel')}
       </button>
     </div>
   )

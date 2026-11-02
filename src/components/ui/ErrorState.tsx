@@ -4,6 +4,7 @@
  */
 import { CircleAlert } from 'lucide-react'
 import { Button } from './Button'
+import { t } from '@/features/i18n/i18n'
 
 interface ErrorStateProps {
   message: string
@@ -22,7 +23,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
       <p>{message}</p>
       {onRetry && (
         <Button variant="secondary" onClick={onRetry}>
-          Réessayer
+          {t('common.retry')}
         </Button>
       )}
     </div>

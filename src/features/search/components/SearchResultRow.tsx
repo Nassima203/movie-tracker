@@ -11,6 +11,7 @@ import { useMediaActions } from '@/features/library/hooks/useMediaActions'
 import { cn } from '@/lib/cn'
 import { formatYear, mediaTypeLabel } from '@/lib/format'
 import type { LibraryItem, MediaSummary } from '@/types/media'
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Nombre de colonnes (cellules navigables) par ligne : [ouvrir] [À voir] [En cours] [Vu].
@@ -116,7 +117,7 @@ export function SearchResultRow({
           state={actions.watchlist.state}
           label={actions.watchlist.label}
           onRun={actions.watchlist.run}
-          aria-label={`${actions.watchlist.label} : ${media.title}`}
+          aria-label={t('actions.onTitle', { action: actions.watchlist.label, title: media.title })}
         />
       </div>
 
@@ -138,7 +139,7 @@ export function SearchResultRow({
           state={actions.watching.state}
           label={actions.watching.label}
           onRun={actions.watching.run}
-          aria-label={`${actions.watching.label} : ${media.title}`}
+          aria-label={t('actions.onTitle', { action: actions.watching.label, title: media.title })}
         />
       </div>
       <div
@@ -159,7 +160,7 @@ export function SearchResultRow({
           state={actions.watched.state}
           label={actions.watched.label}
           onRun={actions.watched.run}
-          aria-label={`${actions.watched.label} : ${media.title}`}
+          aria-label={t('actions.onTitle', { action: actions.watched.label, title: media.title })}
         />
       </div>
     </div>

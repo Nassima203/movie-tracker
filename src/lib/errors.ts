@@ -3,35 +3,33 @@
  * messages courts et compréhensibles, et journalise les détails en développement.
  */
 import { TmdbProxyError } from '@/lib/tmdb'
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Convertit n'importe quelle erreur en un message court et non technique,
  * affichable à l'utilisateur. `fallback` sert quand l'erreur n'est pas reconnue.
  */
-export function getUserMessage(
-  error: unknown,
-  fallback = 'Une erreur est survenue. Veuillez réessayer.',
-): string {
+export function getUserMessage(error: unknown, fallback = t('common.genericError')): string {
   // On vérifie d'abord la connexion : hors ligne, c'est la vraie cause la plupart du temps.
   // Le test sur `navigator` évite un plantage hors navigateur (tests, rendu serveur).
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    return 'Vous semblez hors ligne. Vérifiez votre connexion.'
+    return t('errors.offline')
   }
 
   if (error instanceof TmdbProxyError) {
     switch (error.kind) {
       case 'unauthorized':
-        return 'Votre session a expiré. Reconnectez-vous.'
+        return t('errors.sessionExpired')
       case 'rate_limited':
-        return 'Trop de requêtes. Patientez quelques secondes.'
+        return t('errors.rateLimited')
       case 'timeout':
-        return 'Le service de films met trop de temps à répondre.'
+        return t('errors.timeout')
       case 'network':
-        return 'Impossible de joindre le service de films.'
+        return t('errors.network')
       case 'not_found':
-        return 'Ce titre est introuvable.'
+        return t('errors.notFound')
       case 'not_configured':
-        return 'Le service de films n’est pas encore configuré.'
+        return t('errors.notConfigured')
       case 'invalid_request':
       case 'server':
         // Rien d'utile à dire à l'utilisateur : message générique.

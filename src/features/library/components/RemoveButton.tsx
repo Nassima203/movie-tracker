@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { cn } from '@/lib/cn'
 import type { MediaRef } from '@/types/media'
 import { useRemoveFromLibrary } from '../hooks/useLibraryActions'
+import { t } from '@/features/i18n/i18n'
 
 /**
  * Retrait en deux étapes : l'action est destructive (elle supprime aussi la
@@ -34,7 +35,9 @@ export function RemoveButton({ media, title }: { media: MediaRef; title: string 
         // Accessibilité : le libellé annoncé inclut le titre du média, pour que
         // l'utilisateur d'un lecteur d'écran sache ce qui sera retiré.
         aria-label={
-          confirming ? `Confirmer le retrait de ${title}` : `Retirer ${title} de la bibliothèque`
+          confirming
+            ? t('actions.confirmRemoveLabel', { title })
+            : t('actions.removeLabel', { title })
         }
         className={cn(
           'inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition',
@@ -46,7 +49,7 @@ export function RemoveButton({ media, title }: { media: MediaRef; title: string 
         ) : (
           <Trash2 aria-hidden="true" className="size-4" />
         )}
-        {confirming ? 'Confirmer le retrait' : 'Retirer'}
+        {confirming ? t('actions.confirmRemove') : t('actions.remove')}
       </button>
     </div>
   )

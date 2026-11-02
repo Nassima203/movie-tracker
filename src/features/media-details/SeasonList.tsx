@@ -10,6 +10,7 @@ import { airedRegularSeasons, computeSeriesProgress } from '@/features/library/p
 import { cn } from '@/lib/cn'
 import { formatYear, pluralize } from '@/lib/format'
 import type { LibraryItem, SeasonSummary, SeriesDetails } from '@/types/media'
+import { t } from '@/features/i18n/i18n'
 
 interface SeasonListProps {
   series: SeriesDetails
@@ -46,7 +47,7 @@ export function SeasonList({ series, item }: SeasonListProps) {
   }
 
   if (ordered.length === 0) {
-    return <p className="text-sm text-fg-muted">Aucune information de saison disponible.</p>
+    return <p className="text-sm text-fg-muted">{t('seasons.none')}</p>
   }
 
   return (
@@ -54,14 +55,14 @@ export function SeasonList({ series, item }: SeasonListProps) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex min-w-48 flex-1 flex-col gap-2">
           <h2 id="seasons-title" className="text-lg font-semibold tracking-tight">
-            Saisons
+            {t('seasons.title')}
           </h2>
           {aired.length > 0 && (
             <div className="flex max-w-sm items-center gap-3">
               <ProgressBar
                 value={progress.watched}
                 max={aired.length}
-                label={`Progression de ${series.title}`}
+                label={t('media.progressOf', { title: series.title })}
               />
               <span className="shrink-0 text-sm text-fg-muted">
                 {progress.watched}/{aired.length}
@@ -82,7 +83,7 @@ export function SeasonList({ series, item }: SeasonListProps) {
             className="inline-flex h-10 items-center gap-2 rounded-full bg-fg/10 px-4 text-sm font-medium ring-1 ring-border transition hover:bg-fg/15 disabled:opacity-60"
           >
             {setSeasons.isPending && <Spinner className="size-4" />}
-            {allWatched ? 'Tout marquer non vu' : 'Tout marquer vu'}
+            {allWatched ? t('actions.markAllUnwatched') : t('actions.markAllWatched')}
           </button>
         )}
       </div>
@@ -118,9 +119,11 @@ interface SeasonRowProps {
 function SeasonRow({ season, isAired, isWatched, disabled, onToggle }: SeasonRowProps) {
   const year = formatYear(season.airDate)
   const details = [
-    season.episodeCount ? pluralize(season.episodeCount, 'épisode', 'épisodes') : null,
-    isAired ? year : 'À venir',
-    season.seasonNumber === 0 ? 'Hors progression' : null,
+    season.episodeCount
+      ? pluralize(season.episodeCount, t('media.episode'), t('media.episodes'))
+      : null,
+    isAired ? year : t('seasons.upcoming'),
+    season.seasonNumber === 0 ? t('seasons.notCounted') : null,
   ].filter(Boolean)
 
   return (
